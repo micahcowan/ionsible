@@ -1,0 +1,34 @@
+{
+  "name": "ionsible",
+  "version": "0.1.0",
+  "description": "Ionsible HTML5 game engine",
+  "main": "./build/ionsible.js",
+  "typings": "./build/ionsible.d.ts",
+  "scripts": {
+    "test": "make check"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/micahcowan/ionsible.git"
+  },
+  "keywords": [
+    "HTML5",
+    "canvas",
+    "game",
+    "javascript",
+    "typescript"
+  ],
+  "author": {
+    "email": "micah@addictivecode.org",
+    "name": "Micah J Cowan",
+    "url": "http://micah.cowan.name/"
+  },
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/micahcowan/ionsible/issues"
+  },
+  "homepage": "https://github.com/micahcowan/ionsible#readme",
+  "devDependencies": {
+    "typescript": "^1.8.10"
+  }
+}
