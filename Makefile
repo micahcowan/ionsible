@@ -1,4 +1,4 @@
-.PHONY: all build check clean watch distclean which
+.PHONY: all build check clean watch distclean which doc
 
 PATH := ./node_modules/.bin:$(PATH)
 
@@ -20,6 +20,15 @@ clean:
 
 distclean: clean
 	rm -fr node_modules
+
+# Using typedoc for documentation, but there's no good, official source
+# for where to get a "built" version of typedoc that supports tsc
+# 1.8.10, so it's not included in the dev dependencies.
+#
+# You can set it up from https://github.com/TypeStrong/typedoc
+# by following the instructions in UPDATING.md.
+doc:
+	-typedoc  -t ES5 --module commonjs src --out doc
 
 which:
 	@which $(TSC)
