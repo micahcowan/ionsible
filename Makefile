@@ -27,7 +27,8 @@ distclean: clean
 #
 # You can set it up from https://github.com/TypeStrong/typedoc
 # by following the instructions in UPDATING.md.
-doc:
+doc: doc/index.html
+doc/index.html: $(SRC)
 	-typedoc  -t ES5 --module commonjs src --out doc
 
 which:
