@@ -6,7 +6,7 @@ SRC=src/*.ts
 TSC = tsc
 TSCOPT = 
 
-all: build
+all: build doc
 
 build: build/ionsible.js
 build/ionsible.js: $(SRC)
@@ -16,7 +16,7 @@ watch: $(SRC)
 	$(TSC) $(TSCOPT) -w -d -t ES5 --rootDir src --outDir build $^ || true
 
 clean:
-	rm -fr build
+	rm -fr build doc
 
 distclean: clean
 	rm -fr node_modules
