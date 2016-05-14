@@ -8,7 +8,7 @@
  * Represents a moment in time. Wraps the builtin Date class.
  */
 export class Timestamp {
-    protected _stamp : number;
+    private _stamp : number;
 
     /**
      * Constructs a new Timestamp, given either a Date object or another
@@ -40,7 +40,7 @@ export class Timestamp {
  * Represents a duration of time.
  */
 export class Duration {
-    protected _ms : number;
+    private _ms : number;
 
     /**
      * Constructs a Duration, given either another Duration, or a
