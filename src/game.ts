@@ -3,7 +3,7 @@
  * game.
  */
 import { Timestamp, Duration } from "./space-time"
-import { ISprite } from "./sprite"
+import { ISprite, IDrawable, IUpdatable } from "./sprite"
 
 /**
  * Responsibilities:
@@ -48,14 +48,10 @@ export class Game {
         this.context = canvas.getContext("2d");
     }
 
-    /**
-     * Reference to the canvas element created at construction time.
-     */
+    /** Reference to the canvas element created at construction time. */
     public canvas : HTMLCanvasElement;
 
-    /**
-     * Reference to the "2d" context obtained from `canvas`.
-     */
+    /** Reference to the "2d" context obtained from `canvas`. */
     public context : CanvasRenderingContext2D;
 
     /**
@@ -73,21 +69,14 @@ export class Game {
      */
     public paused : boolean = false;
 
-    /**
-     * Pause the game.
-     */
+    /** Pause the game. */
     pause()       : void { this.paused = true; }
-
-    /**
-     * Unpause the game.
-     */
+    /** Unpause the game. */
     unpause()     : void { this.paused = false; }
-
-    /**
-     * Toggle the paused state of the game.
-     */
+    /** Toggle the paused state of the game. */
     togglePause() : void { this.paused = !this.paused; }
 
+    private scene : ISprite[];
     /**
      * Sets the active sprites to update and draw.
      *
@@ -95,12 +84,48 @@ export class Game {
      * (arrays of sprites) unless you want them to update across all
      * scenes. Always use separate instances to avoid this.
      */
-    setScene(scene : [ ISprite ]) {
+    setScene(scene : ISprite[]) {
+        this.scene = scene;
     }
 
     /**
      * Begin the game, updating and drawing sprites.
      */
     start() : void {
+        /* TODO: remove hardcoded delay in favor of calculated FPS. */
+        /* TODO: implement a max delta. */
+        let lastTime = new Timestamp;
+        let scene = this.scene;
+        let self = this;
+        setInterval(
+            () => {
+                let now = new Timestamp;
+                let delta = now.sub(lastTime);
+                lastTime = now;
+
+                // Updates
+                scene.forEach(
+                    (arg : IUpdatable) => arg.update(delta)
+                );
+
+                // Draw
+                scene.forEach(
+                    (arg : IDrawable) => {
+                        let c = self.context;
+                        c.beginPath();
+                        c.save();
+
+                        // Translate
+                        c.translate(arg.pos.x, arg.pos.y);
+
+                        arg.draw(c);
+
+                        // Restore
+                        c.restore();
+                    }
+                );
+            }
+          , 20
+        );
     }
 }

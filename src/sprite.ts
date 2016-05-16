@@ -21,7 +21,8 @@ export interface IDrawable {
      * Draw sprite to canvas.
      *
      * The game first translates the position so that the origin is at
-     * the sprite's x, y coordinates relative to the camera.
+     * the sprite's x, y coordinates relative to the camera, and resets the
+     * context's path.
      */
     draw(c: CanvasRenderingContext2D) : void;
 
@@ -103,7 +104,7 @@ export class Sprite implements ISprite {
      * This is usually the most important member to override in
      * descendant classes of `Sprite`.
      */
-    protected behaviorsDef : IBehaviorFactory[];
+    protected behaviorsDef : IBehaviorFactory[] = [];
 
     /**
      * The list of behaviors. The value is derived from `behaviorsDef`
@@ -112,23 +113,29 @@ export class Sprite implements ISprite {
     protected behaviors : IUpdatable[];
 
     /**
-     * The `registry` is intended to be used as a publicly accessible
+     * A registry intended to be used as a publicly accessible
      * scratchpad space by behaviors.
      */
-    protected registry : any
+    protected reg : any
 
     /**
      * Creates a new `Sprite` instance, and instanciates all the
      * behaviors from the `behaviorsDef` declaration.
      */
-    constructor (public game : Game) {
-        this.behaviors = this.behaviorsDef.map(
-            (x : IBehaviorFactory) : IUpdatable => new x(game, this)
-        );
-    }
+    constructor (public game : Game) {}
 
     /** Default implementation calls `.update` on the behaviors. */
     update(delta : Duration) : void {
+        // Ugh. Wanted this to be in the constructor, but TypeScript (as
+        // of 1.8.10) calls constructors before evaluating member
+        // declarations, so there's no way to provide behaviorsDef
+        // before construction.
+        if (this.behaviorsDef !== undefined) {
+            this.behaviors = this.behaviorsDef.map(
+                (x : IBehaviorFactory) : IUpdatable => new x(this.game, this)
+            );
+            this.behaviorsDef = undefined;
+        }
         this.behaviors.forEach(
             (x : IUpdatable) => x.update(delta)
         );
