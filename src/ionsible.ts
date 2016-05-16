@@ -7,3 +7,4 @@
 
 export * from "./space-time"
 export * from "./game"
+export * from "./sprite"

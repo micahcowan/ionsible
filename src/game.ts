@@ -3,6 +3,7 @@
  * game.
  */
 import { Timestamp, Duration } from "./space-time"
+import { ISprite } from "./sprite"
 
 /**
  * Responsibilities:
@@ -61,7 +62,7 @@ export class Game {
      * The total time that has elapsed during the game (not counting
      * paused time).
      */
-    public elapsed : Duration;
+    public elapsed : Duration = new Duration(0);
 
     /**
      * The paused/not paused status of the game.
@@ -86,4 +87,20 @@ export class Game {
      * Toggle the paused state of the game.
      */
     togglePause() : void { this.paused = !this.paused; }
+
+    /**
+     * Sets the active sprites to update and draw.
+     *
+     * **Warning**: Do not share sprite objects amongst multiple scenes
+     * (arrays of sprites) unless you want them to update across all
+     * scenes. Always use separate instances to avoid this.
+     */
+    setScene(scene : [ ISprite ]) {
+    }
+
+    /**
+     * Begin the game, updating and drawing sprites.
+     */
+    start() : void {
+    }
 }
