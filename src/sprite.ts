@@ -68,7 +68,7 @@ export interface ISprite extends IDrawable, IUpdatable {
  * A "factory function" that produces an `IUpdatable`.
  */
 export interface IBehaviorFactory {
-    new (game : Game, sprite : Sprite) : IUpdatable;
+    (game : Game, sprite : Sprite) : IUpdatable;
 }
 
 /**
@@ -80,6 +80,7 @@ export interface IBehaviorFactory {
  */
 export class Sprite implements ISprite {
     /** Sprite position. */
+    lastPos : Point;
     pos : Point = point();
     /** Sprite x and y speed. */
     vel : Velocity = veloc();
@@ -130,9 +131,10 @@ export class Sprite implements ISprite {
         // of 1.8.10) calls constructors before evaluating member
         // declarations, so there's no way to provide behaviorsDef
         // before construction.
+        this.lastPos = this.pos.clone();
         if (this.behaviorsDef !== undefined) {
             this.behaviors = this.behaviorsDef.map(
-                (x : IBehaviorFactory) : IUpdatable => new x(this.game, this)
+                (x : IBehaviorFactory) : IUpdatable => x(this.game, this)
             );
             this.behaviorsDef = undefined;
         }

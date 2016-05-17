@@ -8,5 +8,8 @@
 export * from "./space-time"
 export * from "./game"
 export * from "./sprite"
+
 import * as b from "./behavior"
-export { b }
+import * as util from "./util"
+
+export { b, util }

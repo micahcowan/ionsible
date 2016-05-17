@@ -88,6 +88,15 @@ export class Game {
         this.scene = scene;
     }
 
+    /** The target framerate. */
+    public fps : number = 50;
+
+    /**
+     * If more than this number of frames would be skipped since the
+     * last update, we lock it to this number.
+     */
+    public maxFramesSkipped : number = 5;
+
     /**
      * Begin the game, updating and drawing sprites.
      */
@@ -102,6 +111,11 @@ export class Game {
                 let now = new Timestamp;
                 let delta = now.sub(lastTime);
                 lastTime = now;
+
+                // Lock down the number of skipped frames.
+                let maxDelta = new Duration(1000/this.fps * this.maxFramesSkipped)
+                if (delta.ms > maxDelta.ms)
+                    delta = maxDelta;
 
                 // Updates
                 scene.forEach(
@@ -125,7 +139,7 @@ export class Game {
                     }
                 );
             }
-          , 20
+          , 1000 / this.fps
         );
     }
 }
