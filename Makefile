@@ -5,6 +5,7 @@ PATH := ./node_modules/.bin:$(PATH)
 SRC=src/*.ts
 TSC = tsc
 TSCOPT = 
+DOCOPT = --theme minimal
 
 all: build doc
 
@@ -29,7 +30,7 @@ distclean: clean
 # by following the instructions in UPDATING.md.
 doc: doc/index.html
 doc/index.html: $(SRC)
-	-typedoc  -t ES5 --module commonjs src --out doc
+	-typedoc $(DOCOPT) -t ES5 --module commonjs src --out doc
 
 which:
 	@which $(TSC)
