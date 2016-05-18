@@ -4,61 +4,12 @@
 import { Game } from "./game";
 import { Sprite } from "./sprite";
 import { Point, point, veloc } from "./space-time";
-
-/** Rectangle represented as top, left, bottom, right. */
-export type TLBR = {
-    t : number
-  , l : number
-  , b : number
-  , r : number
-};
-
-/** Rectangle represented as x, y, width, height. */
-export type XYWH = {
-    x : number
-  , y : number
-  , w : number
-  , h : number
-}
-
-/** Rectangle by any other name... */
-export type Rect = TLBR | XYWH;
-
-/** Get a TLBR rectangle from either representation. */
-export function getTLBR(arg : Rect) : TLBR {
-    let tlbr = <TLBR>arg;
-    let xywh = <XYWH>arg;
-    if (tlbr.t !== undefined && tlbr.l !== undefined
-            && tlbr.b !== undefined && tlbr.r !== undefined) {
-        return tlbr;
-    }
-    else {
-        return {
-            l: xywh.x
-          , t: xywh.y
-          , r: xywh.x + xywh.w
-          , b: xywh.y + xywh.h
-        };
-    }
-}
-
-/** Get a XYWH rectangle from either representation. */
-export function getXYWH(arg : Rect) : XYWH {
-    let tlbr = <TLBR>arg;
-    let xywh = <XYWH>arg;
-    if (xywh.x !== undefined && xywh.y !== undefined
-            && xywh.w !== undefined && xywh.h !== undefined) {
-        return xywh;
-    }
-    else {
-        return {
-            x: tlbr.l
-          , y: tlbr.t
-          , w: tlbr.r - tlbr.l
-          , h: tlbr.b - tlbr.t
-        };
-    }
-}
+import {
+    Exceed
+  , IBoundsCallback
+  , Rect
+  , getTLBR
+} from "./shape";
 
 /** Function that takes a game and sprite, and returns a rectangle **/
 export type RectCalculator = (game : Game, sprite: Sprite) => Rect;
@@ -81,45 +32,6 @@ export function getRect(rect : DynamicRect, game : Game,
 }
 
 /**
- * Indicates what side of a set of boundaries was exceeded.
- * If multiple sides were exceeded, a bitwise or will be used.
- */
-export enum BoundsSide {
-    None    = 0
-  , Top     = 1
-  , Left    = 2
-  , Bottom  = 4
-  , Right   = 8
-}
-
-/**
- * Type of a callback function, called when a sprite has exceeded
- * defined boundaries.
- */
-export type IBoundsCallback
-    = (sprite : Sprite, bounds : Rect, side : BoundsSide) => void;
-
-/**
- * Returns which sides (if any) of a boundary were exceeded.
- */
-export function exceedsBounds(pt : Point, rect : Rect) : BoundsSide {
-    let tlbr : TLBR       = getTLBR(rect);
-    let side : BoundsSide = BoundsSide.None;
-
-    if (pt.x < tlbr.l)
-        side |= BoundsSide.Left;
-    else if (pt.x > tlbr.r)
-        side |= BoundsSide.Right;
-
-    if (pt.y < tlbr.t)
-        side |= BoundsSide.Top;
-    else if (pt.y > tlbr.b)
-        side |= BoundsSide.Bottom;
-
-    return side;
-}
-
-/**
  * Provides a set of boundaries representing the size of the canvas.
  * Not really useful for games with a moving camera, but otherwise can
  * keep everything bouncing around within its view.
@@ -133,29 +45,50 @@ export let gameRect : RectCalculator = (game : Game, sprite : Sprite) => ({
  * inside the bounds.
  */
 export let spriteBounce : IBoundsCallback
-        = (sprite : Sprite, bounds : Rect, side : BoundsSide) => {
+        = (sprite : Sprite, bounds : Rect, exceed : Exceed) => {
     let {x, y} = sprite.pos;
     let {t, l, b, r} = getTLBR(bounds);
     let {x: h, y: v} = sprite.vel;
 
-    if (side & BoundsSide.Left) {
-        x = l + (l - x);
-        h = -h;
-    }
-    else if (side & BoundsSide.Right) {
-        x = r - (x - r);
+    if (exceed.x != 0) {
+        x = (exceed.x < 0? l : r) - exceed.x;
         h = -h;
     }
 
-    if (side & BoundsSide.Top) {
-        y = t + (t - y);
-        v = -v;
-    }
-    else if (side & BoundsSide.Bottom) {
-        y = b - (y - b);
+    if (exceed.y != 0) {
+        y = (exceed.y < 0? t : b) - exceed.y;
         v = -v;
     }
 
     sprite.pos = point(x, y);
     sprite.vel = veloc(h, v);
 };
+
+/**
+ * Tests whether val is null or undefined.
+ *
+ * You can use this with a type such as:
+ *
+ *     let obj : { x : number } | void = { x: 10 }
+ *     return obj.x // ERROR! .x isn't in type: [blah] | void
+ *     if (!isVoid(obj)) return obj.x; // OKAY
+*/
+export function isVoid(val : void | any) : val is void {
+    return (val === undefined) || (val === null);
+}
+
+/**
+ * Shrinks `arect` by the dimensions of `brect`, such that
+ * checking a single point centered in `brect` by the bounds of `arect`
+ * is the same as checking `brect` by the bounds of `arect`.
+ */
+export function shrinkRect(arect : Rect, brect : Rect) : Rect {
+    let aR = getTLBR(arect);
+    let bR = getTLBR(brect);
+    return {
+        t: aR.t - bR.t
+      , l: aR.l - bR.l
+      , b: aR.b - bR.b
+      , r: aR.r - bR.r
+    };
+}

@@ -3,22 +3,25 @@
  *
  * These are exported as `b`, so if you import ionsible like:
  *
- *     import * as Ion from "ionsible"
+ *     import * as ion from "ionsible"
  *
  * Then you would refer to the behavior `Momentum` in this module as
- * `Ion.b.Momentum`.
+ * `ion.b.Momentum`.
  */
 import { IUpdatable, IBehaviorFactory, Sprite } from "./sprite";
 import { Game } from "./game";
 import { Duration } from "./space-time";
 import {
     DynamicRect
+  , getRect
+  , shrinkRect
+} from "./util";
+import {
+    Rect
   , IBoundsCallback
   , exceedsBounds
-  , BoundsSide
-  , Rect
-  , getRect
-} from "./util";
+  , testExceed
+} from "./shape";
 
 /**
  * Convenience base class for behaviors, which saves away the required
@@ -60,10 +63,14 @@ class BoundedClass extends BehaviorFac implements IUpdatable {
         super(game, sprite);
     }
     update(delta : Duration) {
+        let bodyBB = this.sprite.body.bounds;
+
         let rect : Rect = getRect(this.drect, this.game, this.sprite);
-        let side = exceedsBounds(this.sprite.pos, rect)
-        if (side != BoundsSide.None) {
-            this.cb(this.sprite, rect, side);
+        rect = shrinkRect(rect, bodyBB);
+
+        let exceed = exceedsBounds(this.sprite.pos, rect)
+        if (testExceed(exceed)) {
+            this.cb(this.sprite, rect, exceed);
         }
     }
 }

@@ -12,6 +12,8 @@ import {
   , accel }
     from "./space-time";
 import { Game } from "./game";
+import { IBody } from "./shape";
+import * as body from "./body";
 
 /**
  * Interface for things that can be drawn by the game.
@@ -91,6 +93,8 @@ export class Sprite implements ISprite {
     rotation : number = 0;
 
     autoRotate : boolean = true;
+
+    body : IBody = body.none;
 
     /**
      * Draw Sprite to canvas.
