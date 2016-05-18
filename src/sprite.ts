@@ -81,11 +81,12 @@ export interface IBehaviorFactory {
 export class Sprite implements ISprite {
     /** Sprite position. */
     lastPos : Point;
+    /** Sprite position. */
     pos : Point = point();
     /** Sprite x and y speed. */
     vel : Velocity = veloc();
     /** X and y acceleration. */
-    accel : Acceleration = accel();
+    //accel : Acceleration = accel();
     /** Sprite rotation in radians. */
     rotation : number = 0;
 
@@ -101,17 +102,17 @@ export class Sprite implements ISprite {
     }
 
     /**
-     * A list of factories to initialize the members of `behaviors`.
+     * A list of behaviors that the sprite will have.
      * This is usually the most important member to override in
      * descendant classes of `Sprite`.
      */
-    protected behaviorsDef : IBehaviorFactory[] = [];
+    protected behaviors : IBehaviorFactory[] = [];
 
     /**
-     * The list of behaviors. The value is derived from `behaviorsDef`
+     * The list of instantiated behaviors. The value is derived from `behaviors`
      * upon `Sprite` construction.
      */
-    protected behaviors : IUpdatable[];
+    protected behaviorsInst : IUpdatable[];
 
     /**
      * A registry intended to be used as a publicly accessible
@@ -121,7 +122,7 @@ export class Sprite implements ISprite {
 
     /**
      * Creates a new `Sprite` instance, and instanciates all the
-     * behaviors from the `behaviorsDef` declaration.
+     * behaviors from the `behaviors` declaration.
      */
     constructor (public game : Game) {}
 
@@ -129,16 +130,16 @@ export class Sprite implements ISprite {
     update(delta : Duration) : void {
         // Ugh. Wanted this to be in the constructor, but TypeScript (as
         // of 1.8.10) calls constructors before evaluating member
-        // declarations, so there's no way to provide behaviorsDef
+        // declarations, so there's no way to provide behaviors
         // before construction.
         this.lastPos = this.pos.clone();
-        if (this.behaviorsDef !== undefined) {
-            this.behaviors = this.behaviorsDef.map(
+        if (this.behaviors !== undefined) {
+            this.behaviorsInst = this.behaviors.map(
                 (x : IBehaviorFactory) : IUpdatable => x(this.game, this)
             );
-            this.behaviorsDef = undefined;
+            this.behaviors = undefined;
         }
-        this.behaviors.forEach(
+        this.behaviorsInst.forEach(
             (x : IUpdatable) => x.update(delta)
         );
     }
