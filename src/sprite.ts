@@ -27,7 +27,9 @@ export interface IDrawable {
      * context's path.
      */
     draw(c: CanvasRenderingContext2D) : void;
+}
 
+export interface IPositionedDrawable extends IDrawable {
     /**
      * The sprite's global position. Needed to translate coordinates for the
      * camera.
@@ -63,7 +65,7 @@ export interface IUpdatable {
  * Sprites are both updated, and drawn to canvas, so ISprite combines
  * both features.
  */
-export interface ISprite extends IDrawable, IUpdatable {
+export interface ISprite extends IPositionedDrawable, IUpdatable {
 }
 
 /**
@@ -71,6 +73,13 @@ export interface ISprite extends IDrawable, IUpdatable {
  */
 export interface IBehaviorFactory {
     (game : Game, sprite : Sprite) : IUpdatable;
+}
+
+/**
+ * A "factory function" that produces an `IDrawable`.
+ */
+export interface IDrawableFactory {
+    (game : Game, sprite : Sprite) : IDrawable;
 }
 
 /**
@@ -97,15 +106,6 @@ export class Sprite implements ISprite {
     body : IBody = body.none;
 
     /**
-     * Draw Sprite to canvas.
-     *
-     * Empty definition: Must be overridden if you actually want to
-     * draw something.
-     */
-    draw(context : CanvasRenderingContext2D) : void {
-    }
-
-    /**
      * A list of behaviors that the sprite will have.
      * This is usually the most important member to override in
      * descendant classes of `Sprite`.
@@ -117,6 +117,19 @@ export class Sprite implements ISprite {
      * upon `Sprite` construction.
      */
     protected behaviorsInst : IUpdatable[];
+
+    /**
+     * A factory to produce a drawable that will be used to draw this
+     * sprite. Keeping it as a separate member makes it easier to
+     * separate from the rest of the content, and maintain a declarative
+     * style for Sprite descendant classes.
+     */
+    protected drawer : IDrawableFactory;
+
+    /**
+     * The instantiated drawer.
+     */
+    protected drawerInst : IDrawable;
 
     /**
      * A registry intended to be used as a publicly accessible
@@ -146,5 +159,20 @@ export class Sprite implements ISprite {
         this.behaviorsInst.forEach(
             (x : IUpdatable) => x.update(delta)
         );
+    }
+
+    /** Default implementation calls `drawerInst.draw`. */
+    draw(c : CanvasRenderingContext2D) : void {
+        // Ugh. Wanted this to be in the constructor, but TypeScript (as
+        // of 1.8.10) calls constructors before evaluating member
+        // declarations, so there's no way to provide the drawer
+        // before construction.
+        if (this.drawer !== undefined) {
+            this.drawerInst = this.drawer(this.game, this);
+            this.drawer = undefined;
+        }
+        else if (this.drawerInst !== undefined) {
+            this.drawerInst.draw(c);
+        }
     }
 }

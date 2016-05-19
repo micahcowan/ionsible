@@ -3,7 +3,7 @@
  * game.
  */
 import { Timestamp, Duration } from "./space-time"
-import { ISprite, IDrawable, IUpdatable } from "./sprite"
+import { ISprite, IPositionedDrawable, IUpdatable } from "./sprite"
 
 /**
  * Responsibilities:
@@ -137,7 +137,7 @@ export class Game {
 
                 // Draw
                 scene.forEach(
-                    (arg : IDrawable) => {
+                    (arg : IPositionedDrawable) => {
                         let c = self.context;
                         c.beginPath();
                         c.save();
