@@ -31,18 +31,31 @@ export class Game {
         width? : number
       , height? : number
       , id?: string
-      , parent?: HTMLElement
+      , parent?: string | HTMLElement
     } = {}) {
         let canvas = document.createElement('canvas');
         canvas.width = width;
         canvas.height = height;
         if (id) canvas.id = id;
 
+        let parentElem : HTMLElement; // Guaranteed to be element.
         if (parent === undefined) {
-            parent = document.getElementsByTagName('body')[0];
+            parentElem = document.getElementsByTagName('body')[0];
+        }
+        else if (typeof parent == "string") {
+            let parentStr = parent as string;
+            if (parentStr.substring(0,1) == '#') {
+                parentElem = document.getElementById(parentStr.substring(1));
+            }
+            else {
+                throw "Ionsible: \"" + parentStr + "\" doesn't begin with a #.";
+            }
+        }
+        else {
+            parentElem = parent as HTMLElement;
         }
 
-        parent.appendChild(canvas);
+        parentElem.appendChild(canvas);
 
         this.canvas = canvas;
         this.context = canvas.getContext("2d");
