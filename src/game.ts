@@ -2,7 +2,7 @@
  * Provides the `Game` class, which manages setting up and starting the
  * game.
  */
-import { Timestamp, Duration } from "./space-time"
+import { Timestamp, Duration, Point, point } from "./space-time"
 import { ISprite, IPositionedDrawable, IUpdatable } from "./sprite"
 
 /**
@@ -66,6 +66,11 @@ export class Game {
 
     /** Reference to the "2d" context obtained from `canvas`. */
     public context : CanvasRenderingContext2D;
+
+    /** Center point on the camera. */
+    public get center() : Point {
+        return point(this.canvas.width/2, this.canvas.height/2);
+    }
 
     /**
      * The total time that has elapsed during the game (not counting
