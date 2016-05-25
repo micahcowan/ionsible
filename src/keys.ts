@@ -12,7 +12,7 @@ export default class Keys {
      * A mapping of key names, and associated handlers.
      * Called on `.pulse()`; see the `.connect()` method.
      */
-    private connections : KeyHandlerMap = new Map;
+    private connections : KeyHandlerMap = {};
 
     /**
      * A mapping of key names, and associated handlers,
@@ -20,7 +20,7 @@ export default class Keys {
      *
      * The handlers are registered via `.onDown()`.
      */
-    private downs       : KeyHandlerMap = new Map;
+    private downs       : KeyHandlerMap = {};
 
     /**
      * A mapping of key names, and associated handlers,
@@ -28,13 +28,13 @@ export default class Keys {
      *
      * The handlers are registered via `.onUp()`.
      */
-    private ups         : KeyHandlerMap = new Map;
+    private ups         : KeyHandlerMap = {};
 
     /**
      * Tracks which keys are currently pressed, based on whether we've
      * seen a `keydown` without a subsequent `keyup`.
      */
-    private keys        : Set<string> = new Set;
+    private keys        : KeySet = {};
 
     /**
      * Used to hold a reference to an `ActionSet` currently being
@@ -66,7 +66,7 @@ export default class Keys {
      * occurring while the associated key is pressed.
      */
     public connect(key : string, handler : () => void) : void {
-        this.connections.set(key, handler);
+        this.connections[key] = handler;
     }
 
     /**
@@ -91,12 +91,12 @@ export default class Keys {
 
     /** Register a handler for keydown. */
     public onDown(key : string, handler : KeyHandler) : void {
-        this.downs.set(key, handler);
+        this.downs[key] = handler;
     }
 
     /** Register a handler for keyup. */
     public onUp(key : string, handler : KeyHandler) : void {
-        this.ups.set(key, handler);
+        this.ups[key] = handler;
     }
 
     /**
@@ -117,9 +117,9 @@ export default class Keys {
         // `this` is bound to the Keys instance.
         let keys = this.getKeys(ev);
         keys.forEach(k => {
-            this.keys.add(k);
-            if (this.downs.has(k)) {
-                (this.downs.get(k))(ev);
+            this.keys[k] = true;
+            if (this.downs[k] !== undefined) {
+                (this.downs[k])(ev);
             }
         });
 
@@ -145,9 +145,9 @@ export default class Keys {
         // `this` is bound to the Keys instance.
         let keys = this.getKeys(ev);
         keys.forEach(k => {
-            this.keys.delete(k);
-            if (this.ups.has(k)) {
-                (this.ups.get(k))(ev);
+            delete keys[k];
+            if (this.ups[k] !== undefined) {
+                (this.ups[k])(ev);
             }
         });
 
@@ -240,7 +240,19 @@ export interface KeyHandler {
 }
 
 // private
-type KeyHandlerMap = Map<string, KeyHandler>;
+/**
+ * A mapping of keys (via string name) to handlers.
+ *
+ * Not a true `Map` instance: ordinary JS object for ES5 compatibility.
+ */
+type KeyHandlerMap = {[key: string] : KeyHandler};
+
+/**
+ * Set of keys (via string name).
+ *
+ * Not a true `Set` instance: ordinary JS object for ES5 compatibility.
+ */
+type KeySet = {[key: string] : boolean};
 
 /**
  * An association of string labels, to lists of key names.
