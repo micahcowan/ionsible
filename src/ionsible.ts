@@ -9,6 +9,7 @@ export * from "./space-time"
 export * from "./game"
 export * from "./sprite"
 export * from "./shape"
+export * from "./keys"
 
 import * as b from "./behavior"
 import * as util from "./util"
