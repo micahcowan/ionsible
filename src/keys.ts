@@ -46,7 +46,7 @@ export default class Keys {
      * Constructs a new `Keys` object, registering internal key event
      * handlers.
      */
-    constructor(private target = window) {
+    constructor(private target : EventTarget = window) {
         this.target.addEventListener('keydown', this.handleKeyDown);
         this.target.addEventListener('keyup', this.handleKeyUp);
     }
@@ -219,6 +219,10 @@ export default class Keys {
         return keys;
     }
 
+    /**
+     * Return the labels for the sets of keys registered via `.actions()`,
+     * corresponding to keys that are currently pressed.
+     */
     public pulse() : ActionSet {
         this.actionTracker = {};
         for (let key in this.keys) {
