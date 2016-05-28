@@ -1,11 +1,12 @@
 .PHONY: all build check clean watch distclean which doc
 
-PATH := ./node_modules/.bin:$(PATH)
+PATH:=./node_modules/.bin:$(PATH)
+export PATH
 
 SRC=src/*.ts
-TSC = tsc
-TSCOPT = 
-DOCOPT = --theme minimal
+TSC=./node_modules/.bin/tsc
+TSCOPT=
+DOCOPT=
 
 all: build doc
 
