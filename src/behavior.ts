@@ -22,6 +22,10 @@ import {
   , exceedsBounds
   , testExceed
 } from "./shape";
+import {
+    ActionKeysMap
+  , Keys
+} from "./keys";
 
 /**
  * Convenience base class for behaviors, which saves away the required
@@ -74,3 +78,36 @@ class BoundedClass extends BehaviorFac implements IUpdatable {
         }
     }
 }
+
+/**
+ * A behavior that maps keypresses to changes in sprite rotation.
+ */
+export function RotateKeys(strength : number, keys: ActionKeysMap)
+        : IBehaviorFactory {
+    return (game : Game, sprite : Sprite) =>
+        new RotateKeysClass(game, sprite, strength, keys);
+}
+
+class RotateKeysClass extends BehaviorFac implements IUpdatable {
+    private mk : Keys;
+
+    constructor (game : Game, sprite : Sprite,
+                 public strength : number, private keys : ActionKeysMap) {
+        super(game, sprite);
+
+        this.mk = new Keys;
+        this.mk.actions(keys);
+    }
+
+    update(delta : Duration) {
+        let tracker = this.mk.pulse() as any;
+        if (tracker.clock)
+            this.sprite.rotation += this.strength * delta.s;
+        if (tracker.counter)
+            this.sprite.rotation -= this.strength * delta.s;
+    }
+    // FIXME: Needs a "destroy" function (that would actually be used), that
+    // destroys the keys association.
+}
+
+//export type RotateKeysMap = { clock: string[] | string, counter: string[] | string };

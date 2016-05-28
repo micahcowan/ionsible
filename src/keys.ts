@@ -7,7 +7,7 @@
  * in particular, checking whether given keypresses have taken place
  * since last time we polled for them.
  */
-export default class Keys {
+export class Keys {
     /**
      * A mapping of key names, and associated handlers.
      * Called on `.pulse()`; see the `.connect()` method.
@@ -145,7 +145,7 @@ export default class Keys {
         // `this` is bound to the Keys instance.
         let keys = this.getKeys(ev);
         keys.forEach(k => {
-            delete keys[k];
+            delete this.keys[k];
             if (this.ups[k] !== undefined) {
                 (this.ups[k])(ev);
             }

@@ -150,6 +150,9 @@ export class Game {
                         // Translate
                         c.translate(arg.pos.x, arg.pos.y);
 
+                        // Rotate
+                        c.rotate(arg.rotation);
+
                         arg.draw(c);
 
                         // Restore
