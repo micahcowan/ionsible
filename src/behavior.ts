@@ -10,7 +10,7 @@
  */
 import { IUpdatable, IBehaviorFactory, Sprite } from "./sprite";
 import { Game } from "./game";
-import { Duration, accel } from "./space-time";
+import { Duration, accel, veloc, xyFromDirMag } from "./space-time";
 import {
     DynamicRect
   , getRect
@@ -154,4 +154,35 @@ export function ThrustKeys(strength : number, keys: ActionKeysMap)
         : IBehaviorFactory {
     return (game : Game, sprite : Sprite) =>
         new ThrustKeysClass(game, sprite, strength, keys);
+}
+
+class FrictionClass extends BehaviorFac implements IUpdatable {
+    // strength is in pixels per second per second.
+    constructor(game : Game, sprite : Sprite, public strength : number) {
+        super(game, sprite);
+    }
+
+    update(delta : Duration) {
+        let spr = this.sprite;
+        let dirMag = spr.vel.asDirMag();
+        let adjFric = this.strength * delta.s;
+        if (adjFric >= dirMag.mag) {
+            // Friction has brought sprite to a stop.
+            spr.vel = veloc(0, 0);
+        }
+        else {
+            dirMag.mag -= adjFric;
+            let xy = xyFromDirMag(dirMag);
+            spr.vel = veloc(xy.x, xy.y);
+        }
+    }
+}
+
+/**
+ * A behavior that applies a friction to the momentum of a sprite.
+ */
+export function Friction(strength : number)
+        : IBehaviorFactory {
+    return (game : Game, sprite : Sprite) =>
+        new FrictionClass(game, sprite, strength);
 }

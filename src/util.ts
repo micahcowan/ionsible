@@ -3,7 +3,7 @@
  */
 import { Game } from "./game";
 import { Sprite } from "./sprite";
-import { Point, point, veloc } from "./space-time";
+import { point, veloc } from "./space-time";
 import {
     Exceed
   , IBoundsCallback

@@ -137,6 +137,26 @@ export class DerivablePoint<D extends BasicXY> {
           , this.x * Math.sin(r) + this.y * Math.cos(r)
         );
     }
+
+    /**
+     * Return an equivalent to this thing, as a DirMag (direction +
+     * magnitude).
+     */
+    asDirMag() : DirMag {
+        return {
+            dir: Math.atan2(this.x, this.y)
+          , mag: (new DerivablePoint<D>(0, 0)).distFrom(this)
+        };
+    }
+
+    /**
+     * Returns the distance between this and another DerivablePoint.
+     */
+    distFrom(other : DerivablePoint<D>) : number {
+        let h = this.x - other.x;
+        let v = this.y - other.y;
+        return Math.sqrt(h*h + v*v);
+    }
 }
 
 /**
@@ -172,4 +192,17 @@ export function veloc(x : number = 0, y : number = 0) : Velocity {
 /** Create a new Acceleration. */
 export function accel(x : number = 0, y : number = 0) : Acceleration {
     return new DerivablePoint<BasicXY>(x, y);
+}
+
+/** A direction (in radians), and a magnitude. */
+export type DirMag = { dir: number, mag: number };
+
+/**
+ * Returns a DerivablePoint from a DirMag (reverse of `.asDirMag()`)
+ */
+export function xyFromDirMag(dm : DirMag) : BasicXY {
+    return {
+        x: dm.mag * Math.sin(dm.dir)
+      , y: dm.mag * Math.cos(dm.dir)
+    };
 }
