@@ -128,8 +128,8 @@ export class DerivablePoint<D extends BasicXY> {
     }
 
     /**
-     * Rotate by the specified amount (in radians), and return (does not
-     * modify this).
+     * Rotate on the origin by the specified amount (in radians), and
+     * return (does not modify this object).
      */
     rotated(r : number) : DerivablePoint<D> {
         return new DerivablePoint<D>(

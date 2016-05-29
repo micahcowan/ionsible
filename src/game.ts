@@ -4,6 +4,7 @@
  */
 import { Timestamp, Duration, Point, point } from "./space-time"
 import { ISprite, IPositionedDrawable, IUpdatable } from "./sprite"
+import { Rect, getXYWH } from "./shape";
 
 /**
  * Responsibilities:
@@ -116,6 +117,12 @@ export class Game {
     public maxFramesSkipped : number = 5;
 
     /**
+     * If true, will draw the bounding boxes of sprites
+     * (for debugging purposes).
+     */
+    public drawBB : boolean = false;
+
+    /**
      * Begin the game, updating and drawing sprites.
      */
     start() : void {
@@ -123,7 +130,6 @@ export class Game {
         /* TODO: implement a max delta. */
         let lastTime = new Timestamp;
         let scene = this.scene;
-        let self = this;
         setInterval(
             () => {
                 let now = new Timestamp;
@@ -143,7 +149,7 @@ export class Game {
                 // Draw
                 scene.forEach(
                     (arg : IPositionedDrawable) => {
-                        let c = self.context;
+                        let c = this.context;
                         c.beginPath();
                         c.save();
 
@@ -159,6 +165,29 @@ export class Game {
                         c.restore();
                     }
                 );
+
+                // Draw bounds
+                if (this.drawBB) {
+                    (<any[]>scene).forEach(
+                        (arg : any) => {
+                            let c = this.context;
+                            if (!(arg.body && arg.body.bounds))
+                                return;
+                            c.save();
+
+                            // Translate
+                            c.translate(arg.pos.x, arg.pos.y);
+
+                            c.lineWidth = 1;
+                            c.strokeStyle = 'lime';
+                            let {x, y, w, h} = getXYWH(<Rect>arg.body.bounds);
+                            c.strokeRect(x, y, w, h);
+
+                            // Restore
+                            c.restore();
+                        }
+                    );
+                }
             }
           , 1000 / this.fps
         );
