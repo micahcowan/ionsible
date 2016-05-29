@@ -37,7 +37,7 @@ class BehaviorFac {
 
 class MomentumClass extends BehaviorFac implements IUpdatable {
     update(delta : Duration) {
-        this.sprite.pos = this.sprite.pos.advance(this.sprite.vel, delta);
+        this.sprite.pos = this.sprite.pos.advanced(this.sprite.vel, delta);
     }
 }
 
@@ -118,11 +118,11 @@ class RotateKeysClass extends BehaviorFac implements IUpdatable {
 class ThrustKeysClass extends BehaviorFac implements IUpdatable {
     private mk : Keys;
 
-    private sideToAngle = {
-        forward:    0
-      , back:       Math.PI
-      , left:       Math.PI * 3/2
-      , right:      Math.PI / 2
+    private sideToAccel = {
+        forward:    accel(1, 0)
+      , back:       accel(-1, 0)
+      , left:       accel(0, -1)
+      , right:      accel(0, 1)
     };
 
     constructor(game : Game, sprite : Sprite, public strength : number,
@@ -136,14 +136,12 @@ class ThrustKeysClass extends BehaviorFac implements IUpdatable {
     update(delta : Duration) {
         let tracker = this.mk.pulse();
         let dir = this.sprite.rotation;
-        Object.keys(this.sideToAngle).forEach(side => {
+        Object.keys(this.sideToAccel).forEach(side => {
             if (tracker[side]) {
-                let dir2 = this.sideToAngle[side];
-                let acc = accel(
-                    Math.cos(dir + dir2) * this.strength
-                  , Math.sin(dir + dir2) * this.strength
-                );
-                this.sprite.vel = this.sprite.vel.advance(acc, delta);
+                let acc = this.sideToAccel[side];
+                acc = accel(acc.x * this.strength, acc.y * this.strength);
+                acc = acc.rotated(dir);
+                this.sprite.vel = this.sprite.vel.advanced(acc, delta);
             }
         });
     }

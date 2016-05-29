@@ -114,16 +114,27 @@ export class DerivablePoint<D extends BasicXY> {
         return this._y;
     }
     /**
-     * Advance by an amount approprite by the amount of time that's
-     * passed.
+     * Advance by an amount, adjusted by the amount of time that's
+     * passed, and return the result (does not modify this).
      *
      * If we're a Point, advances according to Velocity.
      * If we're a Velocity, advances according to Acceleration.
      */
-    advance(v : D, t : Duration) : DerivablePoint<D> {
+    advanced(v : D, t : Duration) : DerivablePoint<D> {
         return new DerivablePoint<D>(
             this._x + (v.x * t.s)
           , this._y + (v.y * t.s)
+        );
+    }
+
+    /**
+     * Rotate by the specified amount (in radians), and return (does not
+     * modify this).
+     */
+    rotated(r : number) : DerivablePoint<D> {
+        return new DerivablePoint<D>(
+            this.x * Math.cos(r) + this.y * -Math.sin(r)
+          , this.x * Math.sin(r) + this.y * Math.cos(r)
         );
     }
 }
