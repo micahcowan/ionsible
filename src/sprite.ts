@@ -61,11 +61,19 @@ export interface IUpdatable {
     update(delta: Duration) : void;
 }
 
+export interface IDestroyable {
+    destroy() : void;
+}
+
+export function isDestroyable(b : any | IDestroyable) : b is IDestroyable {
+    return (b.destroy !== undefined && b.destroy !== null);
+}
+
 /**
  * Sprites are both updated, and drawn to canvas, so ISprite combines
  * both features.
  */
-export interface ISprite extends IPositionedDrawable, IUpdatable {
+export interface ISprite extends IPositionedDrawable, IUpdatable, IDestroyable {
 }
 
 /**
@@ -174,5 +182,15 @@ export class Sprite implements ISprite {
         else if (this.drawerInst !== undefined) {
             this.drawerInst.draw(c);
         }
+    }
+
+    destroy() : void {
+        this.behaviorsInst.forEach(
+            (b : any | IDestroyable) => {
+                if (isDestroyable(b)) {
+                    b.destroy();
+                }
+            }
+        );
     }
 }

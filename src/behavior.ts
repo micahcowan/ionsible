@@ -8,7 +8,7 @@
  * Then you would refer to the behavior `Momentum` in this module as
  * `ion.b.Momentum`.
  */
-import { IUpdatable, IBehaviorFactory, Sprite } from "./sprite";
+import { IUpdatable, IDestroyable, IBehaviorFactory, Sprite } from "./sprite";
 import { Game } from "./game";
 import { Duration, accel, veloc, xyFromDirMag } from "./space-time";
 import {
@@ -31,8 +31,13 @@ import {
  * Convenience base class for behaviors, which saves away the required
  * `game` and `sprite` arguments.
  */
-class BehaviorFac {
+class BehaviorFac implements IDestroyable {
     constructor(protected game : Game, protected sprite: Sprite) {}
+
+    destroy() : void {
+        this.game = null;
+        this.sprite = null;
+    }
 }
 
 class MomentumClass extends BehaviorFac implements IUpdatable {
@@ -111,11 +116,18 @@ class RotateKeysClass extends BehaviorFac implements IUpdatable {
     }
     // FIXME: Needs a "destroy" function (that would actually be used), that
     // destroys the keys association.
+
+    destroy() : void {
+        this.mk.destroy();
+        this.mk = null;
+
+        super.destroy();
+    }
 }
 
 //export type RotateKeysMap = { clock: string[] | string, counter: string[] | string };
 
-class ThrustKeysClass extends BehaviorFac implements IUpdatable {
+class ThrustKeysClass extends BehaviorFac implements IUpdatable, IDestroyable {
     private mk : Keys;
 
     private sideToAccel = {
@@ -133,7 +145,7 @@ class ThrustKeysClass extends BehaviorFac implements IUpdatable {
         this.mk.actions(keys);
     }
 
-    update(delta : Duration) {
+    update(delta : Duration) : void {
         let tracker = this.mk.pulse();
         let dir = this.sprite.rotation;
         Object.keys(this.sideToAccel).forEach(side => {
@@ -144,6 +156,13 @@ class ThrustKeysClass extends BehaviorFac implements IUpdatable {
                 this.sprite.vel = this.sprite.vel.advanced(acc, delta);
             }
         });
+    }
+
+    destroy() : void {
+        this.mk.destroy();
+        this.mk = null;
+
+        super.destroy();
     }
 }
 
