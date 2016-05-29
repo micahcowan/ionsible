@@ -186,3 +186,28 @@ export function Friction(strength : number)
     return (game : Game, sprite : Sprite) =>
         new FrictionClass(game, sprite, strength);
 }
+
+class SpeedLimitedClass extends BehaviorFac implements IUpdatable {
+    // limit is in pixels per second.
+    constructor(game : Game, sprite : Sprite, public limit : number) {
+        super(game, sprite);
+    }
+
+    update(delta : Duration) {
+        let spr = this.sprite;
+        let dm = spr.vel.asDirMag();
+        if (dm.mag > this.limit)
+            dm.mag = this.limit;
+        let xy = xyFromDirMag(dm)
+        spr.vel = veloc(xy.x, xy.y);
+    }
+}
+
+/**
+ * A behavior that applies a limit to sprite velocity.
+ */
+export function SpeedLimited(limit : number)
+        : IBehaviorFactory {
+    return (game : Game, sprite : Sprite) =>
+        new SpeedLimitedClass(game, sprite, limit);
+}
