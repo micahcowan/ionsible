@@ -10,7 +10,7 @@
  */
 import { IUpdatable, IBehaviorFactory, Sprite } from "./sprite";
 import { Game } from "./game";
-import { Duration } from "./space-time";
+import { Duration, accel } from "./space-time";
 import {
     DynamicRect
   , getRect
@@ -105,9 +105,55 @@ class RotateKeysClass extends BehaviorFac implements IUpdatable {
             this.sprite.rotation += this.strength * delta.s;
         if (tracker.counter)
             this.sprite.rotation -= this.strength * delta.s;
+        this.sprite.rotation %= 2*Math.PI;
+        if (this.sprite.rotation < 0)
+            this.sprite.rotation += 2*Math.PI;
     }
     // FIXME: Needs a "destroy" function (that would actually be used), that
     // destroys the keys association.
 }
 
 //export type RotateKeysMap = { clock: string[] | string, counter: string[] | string };
+
+class ThrustKeysClass extends BehaviorFac implements IUpdatable {
+    private mk : Keys;
+
+    private sideToAngle = {
+        forward:    0
+      , back:       Math.PI
+      , left:       Math.PI * 3/2
+      , right:      Math.PI / 2
+    };
+
+    constructor(game : Game, sprite : Sprite, public strength : number,
+                private keys : ActionKeysMap) {
+        super(game, sprite);
+
+        this.mk = new Keys;
+        this.mk.actions(keys);
+    }
+
+    update(delta : Duration) {
+        let tracker = this.mk.pulse();
+        let dir = this.sprite.rotation;
+        Object.keys(this.sideToAngle).forEach(side => {
+            if (tracker[side]) {
+                let dir2 = this.sideToAngle[side];
+                let acc = accel(
+                    Math.cos(dir + dir2) * this.strength
+                  , Math.sin(dir + dir2) * this.strength
+                );
+                this.sprite.vel = this.sprite.vel.advance(acc, delta);
+            }
+        });
+    }
+}
+
+/**
+ * A behavior that maps keypresses to changes in sprite velocity.
+ */
+export function ThrustKeys(strength : number, keys: ActionKeysMap)
+        : IBehaviorFactory {
+    return (game : Game, sprite : Sprite) =>
+        new ThrustKeysClass(game, sprite, strength, keys);
+}
