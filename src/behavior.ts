@@ -49,9 +49,25 @@ class MomentumClass extends BehaviorFac implements IUpdatable {
 /**
  * Advances the sprite's `pos` by `vel` at each tick.
  * Does _not_ advance `vel` by `accel`.
+ *
+ * Consider using `SpeedRamp` instead.
  */
 export let Momentum : IBehaviorFactory
     = (game, sprite) => new MomentumClass(game, sprite);
+
+class AccelerationClass extends BehaviorFac implements IUpdatable {
+    update(delta : Duration) {
+        this.sprite.vel = this.sprite.vel.advanced(this.sprite.accel, delta);
+    }
+}
+
+/**
+ * Advances the sprite's `vel` by `accel` at each tick.
+ *
+ * Consider using `SpeedRamp` instead.
+ */
+export let Acceleration : IBehaviorFactory
+    = (game, sprite) => new AccelerationClass(game, sprite);
 
 /**
  * Detects when a sprite's position has exceeded certain bounds, and
@@ -137,7 +153,7 @@ class ThrustKeysClass extends BehaviorFac implements IUpdatable, IDestroyable {
       , right:      accel(0, 1)
     };
 
-    constructor(game : Game, sprite : Sprite, public strength : number,
+    constructor(game : Game, sprite : Sprite,
                 private keys : ActionKeysMap) {
         super(game, sprite);
 
@@ -148,12 +164,12 @@ class ThrustKeysClass extends BehaviorFac implements IUpdatable, IDestroyable {
     update(delta : Duration) : void {
         let tracker = this.mk.pulse();
         let dir = this.sprite.rotation;
+        this.sprite.accel = accel(0, 0);
         Object.keys(this.sideToAccel).forEach(side => {
             if (tracker[side]) {
                 let acc = this.sideToAccel[side];
-                acc = accel(acc.x * this.strength, acc.y * this.strength);
                 acc = acc.rotated(dir);
-                this.sprite.vel = this.sprite.vel.advanced(acc, delta);
+                this.sprite.accel = acc;
             }
         });
     }
@@ -169,10 +185,10 @@ class ThrustKeysClass extends BehaviorFac implements IUpdatable, IDestroyable {
 /**
  * A behavior that maps keypresses to changes in sprite velocity.
  */
-export function ThrustKeys(strength : number, keys: ActionKeysMap)
+export function ThrustKeys(keys: ActionKeysMap)
         : IBehaviorFactory {
     return (game : Game, sprite : Sprite) =>
-        new ThrustKeysClass(game, sprite, strength, keys);
+        new ThrustKeysClass(game, sprite, keys);
 }
 
 class FrictionClass extends BehaviorFac implements IUpdatable {
@@ -199,6 +215,8 @@ class FrictionClass extends BehaviorFac implements IUpdatable {
 
 /**
  * A behavior that applies a friction to the momentum of a sprite.
+ *
+ * Consider using `SpeedRamp` instead.
  */
 export function Friction(strength : number)
         : IBehaviorFactory {
@@ -212,7 +230,7 @@ class SpeedLimitedClass extends BehaviorFac implements IUpdatable {
         super(game, sprite);
     }
 
-    update(delta : Duration) {
+    update(delta : Duration) : void {
         let spr = this.sprite;
         let dm = spr.vel.asDirMag();
         if (dm.mag > this.limit)
@@ -224,9 +242,76 @@ class SpeedLimitedClass extends BehaviorFac implements IUpdatable {
 
 /**
  * A behavior that applies a limit to sprite velocity.
+ *
+ * Consider using `SpeedRamp` instead.
  */
 export function SpeedLimited(limit : number)
         : IBehaviorFactory {
     return (game : Game, sprite : Sprite) =>
         new SpeedLimitedClass(game, sprite, limit);
+}
+
+class ThrustClass extends BehaviorFac implements IUpdatable {
+    constructor(game : Game, sprite : Sprite, private strength : number) {
+        super(game, sprite);
+    }
+    update(delta : Duration) : void {
+        let a = this.sprite.accel;
+        this.sprite.accel = accel(this.strength * a.x, this.strength * a.y);
+    }
+}
+
+/**
+ * A behavior that multiplies the thrust determined by `ThrustKeys`, to
+ * produce the desired amount of total acceleration. 
+ *
+ * Consider using `SpeedRamp` instead of this.
+ */
+export function Thrust(strength : number) : IBehaviorFactory {
+    return (game : Game, sprite : Sprite) =>
+        new ThrustClass(game, sprite, strength);
+}
+
+class SpeedRampClass extends BehaviorFac implements IUpdatable {
+    private behaviorsImpl : IUpdatable[];
+
+    constructor(game : Game, sprite : Sprite, maxSpeed : number,
+                rampUp : number, rampDown : number) {
+        super(game, sprite);
+
+        let friction = maxSpeed / rampDown;
+        let thrust = maxSpeed / rampUp + friction;
+
+        let b = this.behaviorsImpl = [];
+        b.push( (Thrust(thrust))(game, sprite) );
+        b.push( (Acceleration)(game, sprite) );
+        b.push( (Friction(friction))(game, sprite) );
+        b.push( (SpeedLimited(maxSpeed))(game, sprite) );
+        b.push( (Momentum)(game, sprite) );
+    }
+
+    update(delta : Duration) : void {
+        let a = this.sprite.accel
+        //if (a.x != 0 || a.y != 0) debugger;
+
+        this.behaviorsImpl.forEach(b => b.update(delta));
+    }
+}
+
+/**
+ * Combines Thrust, Acceleration, Friction, SpeedLimited, and Momentum,
+ * in one behavior.
+ *
+ * Preface this behavior with `ThrustKeys`.
+ * This behavior will calculate the appropriate thrust factor based on
+ * its arguments, and multiply the results from ThrustKeys by it.
+ *
+ * @param maxSpeed The maximum allowed speed for the sprite
+ * @param rampUp The number of seconds required to reach max speed.
+ * @param rampDown The number of seconds require to reach zero from max speed.
+ */
+export function SpeedRamp(maxSpeed : number, rampUp : number,
+                          rampDown : number) : IBehaviorFactory {
+    return (game : Game, sprite : Sprite) =>
+        new SpeedRampClass(game, sprite, maxSpeed, rampUp, rampDown);
 }

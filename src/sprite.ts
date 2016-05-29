@@ -105,7 +105,7 @@ export class Sprite implements ISprite {
     /** Sprite x and y speed. */
     vel : Velocity = veloc();
     /** X and y acceleration. */
-    //accel : Acceleration = accel();
+    accel : Acceleration = accel();
     /** Sprite rotation in radians. */
     rotation : number = 0;
 
