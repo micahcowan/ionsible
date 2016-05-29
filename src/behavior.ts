@@ -8,7 +8,13 @@
  * Then you would refer to the behavior `Momentum` in this module as
  * `ion.b.Momentum`.
  */
-import { IUpdatable, IDestroyable, IBehaviorFactory, Sprite } from "./sprite";
+import {
+    IUpdatable
+  , IDestroyable
+  , isDestroyable
+  , IBehaviorFactory
+  , Sprite
+} from "./sprite";
 import { Game } from "./game";
 import { Duration, accel, veloc, xyFromDirMag } from "./space-time";
 import {
@@ -272,8 +278,8 @@ export function Thrust(strength : number) : IBehaviorFactory {
         new ThrustClass(game, sprite, strength);
 }
 
-class SpeedRampClass extends BehaviorFac implements IUpdatable {
-    private behaviorsImpl : IUpdatable[];
+class SpeedRampClass extends BehaviorFac implements IUpdatable, IDestroyable {
+    private behaviorsInst : IUpdatable[];
 
     constructor(game : Game, sprite : Sprite, maxSpeed : number,
                 rampUp : number, rampDown : number) {
@@ -282,7 +288,7 @@ class SpeedRampClass extends BehaviorFac implements IUpdatable {
         let friction = maxSpeed / rampDown;
         let thrust = maxSpeed / rampUp + friction;
 
-        let b = this.behaviorsImpl = [];
+        let b = this.behaviorsInst = [];
         b.push( (Thrust(thrust))(game, sprite) );
         b.push( (Acceleration)(game, sprite) );
         b.push( (Friction(friction))(game, sprite) );
@@ -294,7 +300,18 @@ class SpeedRampClass extends BehaviorFac implements IUpdatable {
         let a = this.sprite.accel
         //if (a.x != 0 || a.y != 0) debugger;
 
-        this.behaviorsImpl.forEach(b => b.update(delta));
+        this.behaviorsInst.forEach(b => b.update(delta));
+    }
+
+    destroy() : void {
+        let bs = this.behaviorsInst;
+        while (bs.length > 0) {
+            let b = bs.pop() as any | IDestroyable;
+            if (isDestroyable(b))
+                b.destroy();
+        }
+
+        super.destroy();
     }
 }
 

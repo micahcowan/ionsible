@@ -185,12 +185,11 @@ export class Sprite implements ISprite {
     }
 
     destroy() : void {
-        this.behaviorsInst.forEach(
-            (b : any | IDestroyable) => {
-                if (isDestroyable(b)) {
-                    b.destroy();
-                }
-            }
-        );
+        let bs = this.behaviorsInst;
+        while (bs.length > 0) {
+            let b = bs.pop() as any | IDestroyable;
+            if (isDestroyable(b))
+                b.destroy();
+        }
     }
 }
