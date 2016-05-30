@@ -171,13 +171,15 @@ class ThrustKeysClass extends BehaviorFac implements IUpdatable, IDestroyable {
         let tracker = this.mk.pulse();
         let dir = this.sprite.rotation;
         this.sprite.accel = accel(0, 0);
+        let acc = accel(0, 0);
         Object.keys(this.sideToAccel).forEach(side => {
             if (tracker[side]) {
-                let acc = this.sideToAccel[side];
-                acc = acc.rotated(dir);
-                this.sprite.accel = acc;
+                let a = this.sideToAccel[side];
+                acc = accel(acc.x + a.x, acc.y + a.y);
             }
         });
+        acc = acc.rotated(dir);
+        this.sprite.accel = acc;
     }
 
     destroy() : void {
