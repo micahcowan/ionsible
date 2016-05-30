@@ -84,13 +84,6 @@ export interface IBehaviorFactory {
 }
 
 /**
- * A "factory function" that produces an `IDrawable`.
- */
-export interface IDrawableFactory {
-    (game : Game, sprite : Sprite) : IDrawable;
-}
-
-/**
  * The `Sprite` class. The top-level `Game` object neither knows nor
  * cares about the `Sprite` class, just objects that implement the
  * `ISprite` interface. However, the `Sprite` class provides facilities
@@ -132,12 +125,7 @@ export class Sprite implements ISprite {
      * separate from the rest of the content, and maintain a declarative
      * style for Sprite descendant classes.
      */
-    protected drawer : IDrawableFactory;
-
-    /**
-     * The instantiated drawer.
-     */
-    protected drawerInst : IDrawable;
+    protected drawer : IDrawable;
 
     /**
      * A registry intended to be used as a publicly accessible
@@ -169,18 +157,10 @@ export class Sprite implements ISprite {
         );
     }
 
-    /** Default implementation calls `drawerInst.draw`. */
+    /** Default implementation calls `drawer.draw`. */
     draw(c : CanvasRenderingContext2D) : void {
-        // Ugh. Wanted this to be in the constructor, but TypeScript (as
-        // of 1.8.10) calls constructors before evaluating member
-        // declarations, so there's no way to provide the drawer
-        // before construction.
-        if (this.drawer !== undefined) {
-            this.drawerInst = this.drawer(this.game, this);
-            this.drawer = undefined;
-        }
-        else if (this.drawerInst !== undefined) {
-            this.drawerInst.draw(c);
+        if (this.drawer !== undefined && this.drawer !== null) {
+            this.drawer.draw(c);
         }
     }
 
