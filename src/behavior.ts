@@ -334,3 +334,47 @@ export function SpeedRamp(maxSpeed : number, rampUp : number,
     return (game : Game, sprite : Sprite) =>
         new SpeedRampClass(game, sprite, maxSpeed, rampUp, rampDown);
 }
+
+class OnKeyClass extends BehaviorFac implements IUpdatable, IDestroyable {
+    private mk : Keys;
+
+    constructor(game : Game, sprite : Sprite, spec : KeyHandlerSpec) {
+        super(game, sprite);
+
+        this.mk = new Keys;
+        if (spec.keyUp) {
+            this.mk.onUp(spec.keyUp, () => {
+                if (!this.game.paused)
+                    spec.fire(this.sprite);
+            });
+        }
+        if (spec.keyDown) {
+            this.mk.onDown(spec.keyDown, () => {
+                if (!this.game.paused)
+                    spec.fire(this.sprite);
+            });
+        }
+    }
+
+    update() {}
+
+    destroy() : void {
+        this.mk.destroy();
+    }
+}
+
+/**
+ * Connects a key event to a handler, as a behavior.
+ *
+ * Key event is discarded if it occurs while game is paused.
+ */
+export function OnKey(spec : KeyHandlerSpec) : IBehaviorFactory {
+    return (game : Game, sprite : Sprite) =>
+        new OnKeyClass(game, sprite, spec);
+}
+
+export type KeyHandlerSpec = {
+    keyUp?: string | string[]
+  , keyDown?: string | string[]
+  , fire: (sprite : any) => any
+}
