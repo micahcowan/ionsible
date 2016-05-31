@@ -208,7 +208,10 @@ export class Game {
                     delta = maxDelta;
 
                 // Updates
-                this.updateScene(scene, delta);
+                if (!this.paused) {
+                    this.elapsed = new Duration(this.elapsed.ms + delta.ms);
+                    this.updateScene(scene, delta);
+                }
 
                 // Draw
                 this.drawScene(scene, this.context);
