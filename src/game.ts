@@ -3,7 +3,13 @@
  * game.
  */
 import { Timestamp, Duration, Point, point } from "./space-time"
-import { ISprite, IPositionedDrawable, IUpdatable } from "./sprite"
+import {
+    ISprite
+  , ISpriteContainer
+  , IPositionedDrawable
+  , IUpdatable
+  , isSpriteContainer
+} from "./sprite"
 import { Rect, getXYWH } from "./shape";
 
 /**
@@ -122,49 +128,34 @@ export class Game {
      */
     public drawBB : boolean = false;
 
-    /**
-     * Begin the game, updating and drawing sprites.
-     */
-    start() : void {
-        /* TODO: remove hardcoded delay in favor of calculated FPS. */
-        /* TODO: implement a max delta. */
-        let lastTime = new Timestamp;
-        let scene = this.scene;
-        setInterval(
-            () => {
-                let now = new Timestamp;
-                let delta = now.sub(lastTime);
-                lastTime = now;
+    private updateScene(scene : ISprite[], delta : Duration) {
+        scene.forEach(
+            (arg : IUpdatable & (any | ISpriteContainer)) => {
+                arg.update(delta);
+                if (isSpriteContainer(arg)) {
+                    this.updateScene(arg.subsprites, delta);
+                }
+            }
+        );
+    }
 
-                // Lock down the number of skipped frames.
-                let maxDelta = new Duration(1000/this.fps * this.maxFramesSkipped)
-                if (delta.ms > maxDelta.ms)
-                    delta = maxDelta;
+    private drawScene(scene : IPositionedDrawable[],
+                      c : CanvasRenderingContext2D) {
+        scene.forEach(
+            (arg : IPositionedDrawable & (any | ISpriteContainer)) => {
+                c.beginPath();
+                c.save();
 
-                // Updates
-                scene.forEach(
-                    (arg : IUpdatable) => arg.update(delta)
-                );
+                // Translate
+                c.translate(arg.pos.x, arg.pos.y);
 
-                // Draw
-                scene.forEach(
-                    (arg : IPositionedDrawable) => {
-                        let c = this.context;
-                        c.beginPath();
-                        c.save();
+                // Rotate
+                c.rotate(arg.rotation);
 
-                        // Translate
-                        c.translate(arg.pos.x, arg.pos.y);
+                arg.draw(c);
 
-                        // Rotate
-                        c.rotate(arg.rotation);
-
-                        arg.draw(c);
-
-                        // Restore
-                        c.restore();
-                    }
-                );
+                // Restore
+                c.restore();
 
                 // Draw bounds
                 if (this.drawBB) {
@@ -188,6 +179,39 @@ export class Game {
                         }
                     );
                 }
+
+                // Recurse
+                if (isSpriteContainer(arg)) {
+                    this.drawScene(arg.subsprites, c);
+                }
+            }
+        );
+    }
+
+    /**
+     * Begin the game, updating and drawing sprites.
+     */
+    start() : void {
+        /* TODO: remove hardcoded delay in favor of calculated FPS. */
+        /* TODO: implement a max delta. */
+        let lastTime = new Timestamp;
+        let scene = this.scene;
+        setInterval(
+            () => {
+                let now = new Timestamp;
+                let delta = now.sub(lastTime);
+                lastTime = now;
+
+                // Lock down the number of skipped frames.
+                let maxDelta = new Duration(1000/this.fps * this.maxFramesSkipped)
+                if (delta.ms > maxDelta.ms)
+                    delta = maxDelta;
+
+                // Updates
+                this.updateScene(scene, delta);
+
+                // Draw
+                this.drawScene(scene, this.context);
             }
           , 1000 / this.fps
         );

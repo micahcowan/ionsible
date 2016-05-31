@@ -84,6 +84,18 @@ export interface IBehaviorFactory {
 }
 
 /**
+ * A container type for Sprites.
+ */
+export interface ISpriteContainer {
+    subsprites : ISprite[];
+}
+
+export function isSpriteContainer(arg : any | ISpriteContainer)
+        : arg is ISpriteContainer {
+    return (arg.subsprites !== undefined);
+}
+
+/**
  * The `Sprite` class. The top-level `Game` object neither knows nor
  * cares about the `Sprite` class, just objects that implement the
  * `ISprite` interface. However, the `Sprite` class provides facilities
