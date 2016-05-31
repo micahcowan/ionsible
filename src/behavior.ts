@@ -37,7 +37,7 @@ import {
  * Convenience base class for behaviors, which saves away the required
  * `game` and `sprite` arguments.
  */
-class BehaviorFac implements IDestroyable {
+export class BehaviorFac implements IDestroyable {
     constructor(protected game : Game, protected sprite: Sprite) {}
 
     destroy() : void {
