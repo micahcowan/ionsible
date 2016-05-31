@@ -90,13 +90,21 @@ export class Keys {
     }
 
     /** Register a handler for keydown. */
-    public onDown(key : string, handler : KeyHandler) : void {
-        this.downs[key] = handler;
+    public onDown(key : string | string[], handler : KeyHandler) : void {
+        let keys : string[] =
+            (typeof key === 'string')?  [<string>key] : <string[]>key;
+        keys.forEach(k => {
+            this.downs[k] = handler;
+        });
     }
 
     /** Register a handler for keyup. */
-    public onUp(key : string, handler : KeyHandler) : void {
-        this.ups[key] = handler;
+    public onUp(key : string | string[], handler : KeyHandler) : void {
+        let keys : string[] =
+            (typeof key === 'string')?  [<string>key] : <string[]>key;
+        keys.forEach(k => {
+            this.ups[k] = handler;
+        });
     }
 
     /**
