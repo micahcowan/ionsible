@@ -16,7 +16,13 @@ import {
   , Sprite
 } from "./sprite";
 import { Game } from "./game";
-import { Duration, accel, veloc, xyFromDirMag } from "./space-time";
+import {
+    Acceleration as DeltaV
+  , Duration
+  , accel
+  , veloc
+  , xyFromDirMag
+} from "./space-time";
 import {
     DynamicRect
   , getRect
@@ -152,7 +158,7 @@ class RotateKeysClass extends BehaviorFac implements IUpdatable {
 class ThrustKeysClass extends BehaviorFac implements IUpdatable, IDestroyable {
     private mk : Keys;
 
-    private sideToAccel = {
+    private sideToAccel : { [key: string] : DeltaV } = {
         forward:    accel(1, 0)
       , back:       accel(-1, 0)
       , left:       accel(0, -1)
@@ -290,7 +296,7 @@ class SpeedRampClass extends BehaviorFac implements IUpdatable, IDestroyable {
         let friction = maxSpeed / rampDown;
         let thrust = maxSpeed / rampUp + friction;
 
-        let b = this.behaviorsInst = [];
+        let b : IUpdatable[] = this.behaviorsInst = [];
         b.push( (Thrust(thrust))(game, sprite) );
         b.push( (Acceleration)(game, sprite) );
         b.push( (Friction(friction))(game, sprite) );

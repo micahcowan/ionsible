@@ -16,12 +16,20 @@ import { IPositionedDrawable } from "./sprite";
  * specified.
  */
 export class None implements IBody {
-    bounds = { x: 0, y: 0, w: 0, h: 0 }
-    collides(body, pos)     { return false; }
-    pointInBody(pt)         { return false; }
+    bounds : Rect = { x: 0, y: 0, w: 0, h: 0 }
+
+    collides(other : IBody, offset : Point) : boolean {
+        return false;
+    }
+
+    pointInBody(pt : Point) : boolean {
+        return false;
+    }
 
     /** Always easiest for a `body.None` to check. :) */
-    canHandle(other)        { return true; }
+    canHandle(other : IBody) : boolean {
+        return true;
+    }
 }
 
 /** Convenient instance of `body.None`. */
@@ -32,7 +40,7 @@ export let none = new None;
  * center.
  */
 export class Circle implements IBody {
-    public bounds;
+    public bounds : Rect;
 
     constructor(private r : number, private offset? : Point) {
         this.bounds = { t: -r, l: -r, b: r, r: r };

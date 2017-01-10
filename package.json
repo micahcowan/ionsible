@@ -29,6 +29,6 @@
   },
   "homepage": "https://github.com/micahcowan/ionsible#readme",
   "devDependencies": {
-    "typescript": "^1.8.10"
+    "typescript": "^2.1.4"
   }
 }

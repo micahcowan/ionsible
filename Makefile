@@ -5,17 +5,17 @@ export PATH
 
 SRC=src/*.ts
 TSC=./node_modules/.bin/tsc
-TSCOPT=
+TSCOPT=-d -t ES5 --noImplicitAny --strictNullChecks --alwaysStrict
 DOCOPT=
 
 all: build doc
 
 build: build/ionsible.js
 build/ionsible.js: $(SRC)
-	$(TSC) $(TSCOPT) -d -t ES5 --rootDir src --outDir build $^
+	$(TSC) $(TSCOPT) --rootDir src --outDir build $^
 
 watch: $(SRC)
-	$(TSC) $(TSCOPT) -w -d -t ES5 --rootDir src --outDir build $^ || true
+	$(TSC) $(TSCOPT) -w --rootDir src --outDir build $^ || true
 
 clean:
 	rm -fr build doc
