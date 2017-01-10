@@ -123,7 +123,7 @@ export class Sprite implements ISprite {
      * This is usually the most important member to override in
      * descendant classes of `Sprite`.
      */
-    protected behaviors : IBehaviorFactory[] = [];
+    protected behaviors : IBehaviorFactory[];
 
     /**
      * The list of instantiated behaviors. The value is derived from `behaviors`
@@ -158,11 +158,11 @@ export class Sprite implements ISprite {
         // declarations, so there's no way to provide behaviors
         // before construction.
         this.lastPos = this.pos.clone();
-        if (this.behaviors !== undefined) {
+        if (this.behaviors.length != 0) {
             this.behaviorsInst = this.behaviors.map(
                 (x : IBehaviorFactory) : IUpdatable => x(this.game, this)
             );
-            this.behaviors = undefined;
+            this.behaviors = [];
         }
         this.behaviorsInst.forEach(
             (x : IUpdatable) => x.update(delta)

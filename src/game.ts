@@ -45,7 +45,7 @@ export class Game {
         canvas.height = height;
         if (id) canvas.id = id;
 
-        let parentElem : HTMLElement; // Guaranteed to be element.
+        let parentElem : HTMLElement | null; // Guaranteed to be element.
         if (parent === undefined) {
             parentElem = document.getElementsByTagName('body')[0];
         }
@@ -62,10 +62,18 @@ export class Game {
             parentElem = parent as HTMLElement;
         }
 
+        if (parentElem === null) {
+            throw "Ionsible: Couldn't find parent element for canvas.";
+        }
         parentElem.appendChild(canvas);
 
         this.canvas = canvas;
-        this.context = canvas.getContext("2d");
+
+        let context = canvas.getContext("2d");
+        if (context === null) {
+            throw "Ionsible: Could not obtain 2D drawing context from canvas.";
+        }
+        this.context = context;
     }
 
     /** Reference to the canvas element created at construction time. */
