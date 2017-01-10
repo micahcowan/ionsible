@@ -5,6 +5,7 @@ export PATH
 
 SRC=src/*.ts
 TSC=./node_modules/.bin/tsc
+TDOC=./node_modules/.bin/typedoc
 TSCOPT=-d -t ES5 --noImplicitAny --strictNullChecks --alwaysStrict
 DOCOPT=
 
@@ -31,7 +32,7 @@ distclean: clean
 # by following the instructions in UPDATING.md.
 doc: doc/index.html
 doc/index.html: $(SRC)
-	-typedoc $(DOCOPT) -t ES5 --module commonjs src --out doc
+	-$(TDOC) $(DOCOPT) -t ES5 --module commonjs src --out doc
 
 which:
 	@which $(TSC)
