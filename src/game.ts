@@ -146,16 +146,18 @@ export class Game {
                 c.beginPath();
                 c.save();
 
-                // Translate
-                c.translate(arg.pos.x, arg.pos.y);
+                try {
+                    // Translate
+                    c.translate(arg.pos.x, arg.pos.y);
 
-                // Rotate
-                c.rotate(arg.rotation);
+                    // Rotate
+                    c.rotate(arg.rotation);
 
-                arg.draw(c);
-
-                // Restore
-                c.restore();
+                    arg.draw(c);
+                } finally {
+                    // Restore
+                    c.restore();
+                }
 
                 // Draw bounds
                 if (this.drawBB) {
