@@ -6,7 +6,7 @@ export PATH
 SRC=src/*.ts
 TSC=./node_modules/.bin/tsc
 TDOC=./node_modules/.bin/typedoc
-TSCOPT=-d -t ES5 --noImplicitAny --strictNullChecks --alwaysStrict
+TSCOPT=-d -t ES5 --noImplicitAny --strictNullChecks --alwaysStrict --sourceMap
 DOCOPT=
 
 all: build doc
