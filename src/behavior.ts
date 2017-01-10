@@ -47,8 +47,10 @@ export class BehaviorFac implements IDestroyable {
     constructor(protected game : Game, protected sprite: Sprite) {}
 
     destroy() : void {
-        this.game = null;
-        this.sprite = null;
+        //this.game = null;
+        //this.sprite = null;
+        delete this.game;
+        delete this.sprite;
     }
 }
 
@@ -147,7 +149,8 @@ class RotateKeysClass extends BehaviorFac implements IUpdatable {
 
     destroy() : void {
         this.mk.destroy();
-        this.mk = null;
+        //this.mk = null;
+        delete this.mk
 
         super.destroy();
     }
@@ -190,7 +193,8 @@ class ThrustKeysClass extends BehaviorFac implements IUpdatable, IDestroyable {
 
     destroy() : void {
         this.mk.destroy();
-        this.mk = null;
+        //this.mk = null;
+        delete this.mk;
 
         super.destroy();
     }
