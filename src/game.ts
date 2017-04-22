@@ -69,18 +69,13 @@ export class Game {
 
         this.canvas = canvas;
 
-        let context = canvas.getContext("2d");
-        if (context === null) {
-            throw "Ionsible: Could not obtain 2D drawing context from canvas.";
-        }
-        this.context = context;
+        this.camera = new Camera(canvas);
     }
 
     /** Reference to the canvas element created at construction time. */
     public canvas : HTMLCanvasElement;
 
-    /** Reference to the "2d" context obtained from `canvas`. */
-    public context : CanvasRenderingContext2D;
+    public camera : Camera;
 
     /** Center point on the camera. */
     public get center() : Point {
@@ -130,69 +125,12 @@ export class Game {
      */
     public maxFramesSkipped : number = 5;
 
-    /**
-     * If true, will draw the bounding boxes of sprites
-     * (for debugging purposes).
-     */
-    public drawBB : boolean = false;
-
     private updateScene(scene : ISprite[], delta : Duration) {
         scene.forEach(
             (arg : IUpdatable & (any | ISpriteContainer)) => {
                 arg.update(delta);
                 if (isSpriteContainer(arg)) {
                     this.updateScene(arg.subsprites, delta);
-                }
-            }
-        );
-    }
-
-    private drawScene(scene : IPositionedDrawable[],
-                      c : CanvasRenderingContext2D) {
-        scene.forEach(
-            (arg : IPositionedDrawable & (any | ISpriteContainer)) => {
-                c.beginPath();
-                c.save();
-
-                try {
-                    // Translate
-                    c.translate(arg.pos.x, arg.pos.y);
-
-                    // Rotate
-                    c.rotate(arg.rotation);
-
-                    arg.draw(c);
-                } finally {
-                    // Restore
-                    c.restore();
-                }
-
-                // Draw bounds
-                if (this.drawBB) {
-                    (<any[]>scene).forEach(
-                        (arg : any) => {
-                            let c = this.context;
-                            if (!(arg.body && arg.body.bounds))
-                                return;
-                            c.save();
-
-                            // Translate
-                            c.translate(arg.pos.x, arg.pos.y);
-
-                            c.lineWidth = 1;
-                            c.strokeStyle = 'lime';
-                            let {x, y, w, h} = getXYWH(<Rect>arg.body.bounds);
-                            c.strokeRect(x, y, w, h);
-
-                            // Restore
-                            c.restore();
-                        }
-                    );
-                }
-
-                // Recurse
-                if (isSpriteContainer(arg)) {
-                    this.drawScene(arg.subsprites, c);
                 }
             }
         );
@@ -224,9 +162,120 @@ export class Game {
                 }
 
                 // Draw
-                this.drawScene(scene, this.context);
+                this.camera.render(scene);
             }
           , 1000 / this.fps
         );
+    }
+}
+
+/** Interface for cameras that can render a scene (list of sprites/drawable objects) */
+export interface ICamera {
+    /** The camera's center position. */
+    pos : Point;
+
+    /** The camera's rotation (in radians). */
+    rotation : number;
+
+    /** The canvas to which scenes shall be rendered. */
+    readonly canvas : HTMLCanvasElement;
+
+    /** The renderin contexgt of the canvas. */
+    readonly context : CanvasRenderingContext2D;
+
+    /** Render a scene of objects, after adjusting for camera position and rotation. */
+    render(scene : IPositionedDrawable[]) : void;
+}
+
+export class Camera implements ICamera {
+    public pos : Point = point(0, 0);
+    public rotation : number = 0;
+    public context : CanvasRenderingContext2D;
+
+    constructor(public canvas : HTMLCanvasElement) {
+        let context = canvas.getContext("2d");
+        if (context === null) {
+            throw "Ionsible: Could not obtain 2D drawing context from canvas.";
+        }
+        this.context = context;
+    }
+
+    /**
+     * If true, will draw the bounding boxes of sprites
+     * (for debugging purposes).
+     */
+    public drawBB : boolean = false;
+
+    public render(scene : IPositionedDrawable[]) {
+        let c = this.context;
+
+        // Adjust canvas for camera position and rotation.
+        //    First, save the current canvas state:
+        c.save();
+
+        //    Next, set up coords so origin is in canvas center, and y axis goes upward
+        //    (standard cartesian format)
+        c.translate(this.canvas.width/2, this.canvas.height/2);
+        c.scale(1, -1);
+
+        //    Now do the actual camera fixes.
+        if (this.pos.x != 0 || this.pos.y != 0)
+            c.translate(-this.pos.x, -this.pos.y);
+        
+        if (this.rotation != 0)
+            c.rotate(this.rotation);
+
+        // Now, draw each scene element.
+        scene.forEach(
+            (arg : IPositionedDrawable & (any | ISpriteContainer)) => {
+                c.beginPath();
+                c.save();
+
+                try {
+                    // Translate
+                    if (arg.pos.x != 0 || arg.pos.y != 0)
+                        c.translate(arg.pos.x, arg.pos.y);
+
+                    // Rotate
+                    if (arg.rotation != 0)
+                        c.rotate(arg.rotation);
+
+                    arg.draw(c);
+                } finally {
+                    // Restore
+                    c.restore();
+                }
+
+                // Draw bounds
+                if (this.drawBB) {
+                    (<any[]>scene).forEach(
+                        (arg : any) => {
+                            if (!(arg.body && arg.body.bounds))
+                                return;
+                            c.save();
+
+                            // Translate
+                            c.translate(arg.pos.x, arg.pos.y);
+
+                            c.lineWidth = 1;
+                            c.strokeStyle = 'lime';
+                            let {x, y, w, h} = getXYWH(<Rect>arg.body.bounds);
+                            c.strokeRect(x, y, w, h);
+
+                            // Restore
+                            c.restore();
+                        }
+                    );
+                }
+
+                // Recurse
+                if (isSpriteContainer(arg)) {
+                    this.render(arg.subsprites);
+                }
+            }
+        );
+
+        // Restore canvas to pre-camera adjustments.
+        c.restore();
     }
 }
