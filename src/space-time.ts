@@ -159,19 +159,41 @@ export class DerivablePoint<D extends BasicXY> {
      */
     asDirMag() : DirMag {
         return {
-            dir: Math.atan2(this.x, this.y)
+            dir: Math.atan2(this.y, this.x)
           , mag: (new DerivablePoint<D>(0, 0)).distFrom(this)
         };
     }
 
     /**
-     * Return the difference of this DerivablePoint, and another.
+     * Returns the magnitude of this vector, as measured in a particular direction.
+     * @param dir  the direction to measure in, expressed in radians
+     */
+    magnitudeInDir(dir: number) : number {
+        // First, "unrotate" the vector by `dir`
+        let r = this.rotated(-dir);
+        // Then, just measure the x portion.
+        return r.x;
+    }
+
+    /**
+     * Return the difference of this vector, and another.
      * I.e., this - other.
      */
     diff(other : DerivablePoint<D>) : DerivablePoint<D> {
         return new DerivablePoint<D>(
             this.x - other.x
           , this.y - other.y
+        );
+    }
+
+    /**
+     * Return the sum of this vector and another.
+     * I.e., this + other.
+     */
+    combined(other : DerivablePoint<D>) : DerivablePoint<D> {
+        return new DerivablePoint<D>(
+            this.x + other.x
+          , this.y + other.y
         );
     }
 
@@ -232,7 +254,7 @@ export type DirMag = { dir: number, mag: number };
  */
 export function xyFromDirMag(dm : DirMag) : BasicXY {
     return {
-        x: dm.mag * Math.sin(dm.dir)
-      , y: dm.mag * Math.cos(dm.dir)
+        x: dm.mag * Math.cos(dm.dir)
+      , y: dm.mag * Math.sin(dm.dir)
     };
 }
