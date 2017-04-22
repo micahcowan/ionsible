@@ -223,7 +223,7 @@ export class Camera implements ICamera {
             c.translate(-this.pos.x, -this.pos.y);
         
         if (this.rotation != 0)
-            c.rotate(this.rotation);
+            c.rotate(-this.rotation);
 
         // Now, draw each scene element.
         scene.forEach(

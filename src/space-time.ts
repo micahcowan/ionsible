@@ -102,7 +102,22 @@ export interface BasicXY {
  * (Duration) to be involved at each step.
  */
 export class DerivablePoint<D extends BasicXY> {
-    constructor(private _x : number = 0, private _y : number = 0) {}
+    private readonly _x : number;
+    private readonly _y : number;
+    constructor(x : number, y? : number);
+    constructor(dm : DirMag);
+    constructor(x : any, y? : number) {
+        if (x === undefined || typeof x == "number") {
+            this._x = x === undefined? 0 : x;
+            this._y = y === undefined? 0 : y;
+        }
+        else {
+            let dm = x;
+            let xy = xyFromDirMag(dm);
+            this._x = xy.x;
+            this._y = xy.y;
+        }
+    }
     /** Return a copy of this Point, Velocity, or Acceleration. */
     clone() : DerivablePoint<D> {
         return new DerivablePoint<D>(this._x, this._y);
@@ -150,6 +165,17 @@ export class DerivablePoint<D extends BasicXY> {
     }
 
     /**
+     * Return the difference of this DerivablePoint, and another.
+     * I.e., this - other.
+     */
+    diff(other : DerivablePoint<D>) : DerivablePoint<D> {
+        return new DerivablePoint<D>(
+            this.x - other.x
+          , this.y - other.y
+        );
+    }
+
+    /**
      * Returns the distance between this and another DerivablePoint.
      */
     distFrom(other : DerivablePoint<D>) : number {
@@ -164,13 +190,16 @@ export class DerivablePoint<D extends BasicXY> {
  * Since it's a type alias, you can't call `new Point(x, y)`;
  * use the factory function `point()` instead.
  */
-export type Point = DerivablePoint<Velocity>;
+export class Point extends DerivablePoint<Velocity> implements BasicXY {}
+
+//export type Point = DerivablePoint<Velocity>;
 /**
  * A Velocity is advanced by Acceleration over time.
  * Since it's a type alias, you can't call `new Velocity(x, y)`;
  * use the factory function `veloc()` instead.
  */
-export type Velocity = DerivablePoint<Acceleration>;
+export class Velocity extends DerivablePoint<Acceleration> implements BasicXY {}
+//export type Velocity = DerivablePoint<Acceleration>;
 /**
  * An Acceleration isn't normally advanced, but it can be.
  * We're relaxing its rules and letting it be advanced by anything with
@@ -179,7 +208,8 @@ export type Velocity = DerivablePoint<Acceleration>;
  * Since it's a type alias, you can't call `new Acceleration(x, y)`;
  * use the factory function `accel()` instead.
  */
-export type Acceleration = DerivablePoint<BasicXY>;
+export class Acceleration extends DerivablePoint<BasicXY> implements BasicXY {}
+//export type Acceleration = DerivablePoint<BasicXY>;
 
 /** Create a new Point. */
 export function point(x : number = 0, y : number = 0) : Point {
