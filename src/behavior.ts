@@ -115,6 +115,73 @@ class BoundedClass extends BehaviorFac implements IUpdatable {
 }
 
 /**
+ * A behavior that maps keypresses to user-specified handler functions.
+ */
+export function HandleKeys(keys: ActionKeysHandlerMap | ActionKeysHandlerMap[])
+        : IBehaviorFactory {
+    return (game : Game, sprite : Sprite) =>
+        new HandleKeysClass(game, sprite, keys);
+}
+
+/**
+ * A mapping of key handler functions to the keypresses that may trigger them.
+ */
+export type ActionKeysHandlerMap = {
+    handler: KeyHandlerCallback
+  , keys: string[]
+}
+
+/**
+ * A callback for use with `HandleKeys`.
+ */
+export interface KeyHandlerCallback {
+    (game : Game, sprite : Sprite, delta : Duration) : void;
+}
+
+class HandleKeysClass extends BehaviorFac implements IUpdatable {
+    private mk : Keys;
+    private map : { [label: string]: KeyHandlerCallback };
+
+    constructor (game : Game, sprite : Sprite, private keys : ActionKeysHandlerMap | ActionKeysHandlerMap[]) {
+        super(game, sprite);
+
+        this.mk = new Keys;
+        let adjustedKeys : ActionKeysMap = {};
+        this.map = {};
+        let i : number = 0;
+        if (!(keys instanceof Array))
+            keys = [keys];
+        keys.forEach(
+            ({handler, keys: keylist}) => {
+                adjustedKeys[i] = keylist
+                this.map[i] = handler;
+                ++i;
+            }
+        )
+        this.mk.actions(adjustedKeys);
+    }
+
+    update(delta : Duration) {
+        let tracker = this.mk.pulse() as any;
+        for (let key in tracker) {
+            if (tracker[key] && key in this.map) {
+                this.map[key](this.game, this.sprite, delta);
+            }
+        }
+    }
+
+    // FIXME: Needs a "destroy" function (that would actually be used), that
+    // destroys the keys association.
+    destroy() : void {
+        this.mk.destroy();
+        //this.mk = null;
+        delete this.mk
+
+        super.destroy();
+    }
+}
+
+/**
  * A behavior that maps keypresses to changes in sprite rotation.
  */
 export function RotateKeys(strength : number, keys: ActionKeysMap)
