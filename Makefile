@@ -13,10 +13,10 @@ all: build doc
 
 build: build/ionsible.js
 build/ionsible.js: $(SRC)
-	$(TSC) $(TSCOPT) --rootDir src --outDir build $^
+	$(TSC)
 
 watch: $(SRC)
-	$(TSC) $(TSCOPT) -w --rootDir src --outDir build $^ || true
+	$(TSC) -w
 
 clean:
 	rm -fr build doc
@@ -35,4 +35,4 @@ doc/index.html: $(SRC)
 	-$(TDOC) $(DOCOPT) -t ES5 --module commonjs src --out doc
 
 which:
-	@which $(TSC)
+	@which tsc
