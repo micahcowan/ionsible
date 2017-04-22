@@ -69,7 +69,7 @@ export class Game {
 
         this.canvas = canvas;
 
-        this.camera = new Camera(canvas);
+        this.camera = new Camera(this, canvas);
     }
 
     /** Reference to the canvas element created at construction time. */
@@ -134,6 +134,9 @@ export class Game {
                 }
             }
         );
+
+        // Camera update
+        this.camera.update(delta);
     }
 
     /**
@@ -170,7 +173,7 @@ export class Game {
 }
 
 /** Interface for cameras that can render a scene (list of sprites/drawable objects) */
-export interface ICamera {
+export interface ICamera extends IUpdatable {
     /** The camera's center position. */
     pos : Point;
 
@@ -192,7 +195,7 @@ export class Camera implements ICamera {
     public rotation : number = 0;
     public context : CanvasRenderingContext2D;
 
-    constructor(public canvas : HTMLCanvasElement) {
+    constructor(public game : Game, public canvas : HTMLCanvasElement) {
         let context = canvas.getContext("2d");
         if (context === null) {
             throw "Ionsible: Could not obtain 2D drawing context from canvas.";
@@ -278,4 +281,9 @@ export class Camera implements ICamera {
         // Restore canvas to pre-camera adjustments.
         c.restore();
     }
+
+    /**
+     * Default implementation does nothing.
+     */
+    update(delta : Duration) {}
 }
