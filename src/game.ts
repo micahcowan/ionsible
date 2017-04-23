@@ -154,7 +154,6 @@ export class Game {
         /* TODO: remove hardcoded delay in favor of calculated FPS. */
         /* TODO: implement a max delta. */
         let lastTime = new Timestamp;
-        let scene = this.scene;
         setInterval(
             () => {
                 let now = new Timestamp;
@@ -169,11 +168,11 @@ export class Game {
                 // Updates
                 if (!this.paused) {
                     this.elapsed = new Duration(this.elapsed.ms + delta.ms);
-                    this.updateScene(scene, delta);
+                    this.updateScene(this.scene, delta);
                 }
 
                 // Draw
-                this.camera.render(scene);
+                this.camera.render(this.scene);
             }
           , 1000 / this.fps
         );
