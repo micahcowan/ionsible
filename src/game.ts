@@ -230,12 +230,12 @@ export class Camera implements ICamera {
         c.translate(this.canvas.width/2, this.canvas.height/2);
         c.scale(1, -1);
 
+        if (this.rotation != 0)
+            c.rotate(-this.rotation);
+
         //    Now do the actual camera fixes.
         if (true && (this.pos.x != 0 || this.pos.y != 0))
             c.translate(-this.pos.x, -this.pos.y);
-        
-        if (this.rotation != 0)
-            c.rotate(this.rotation);
 
         // Now, draw each scene element.
         scene.forEach(
