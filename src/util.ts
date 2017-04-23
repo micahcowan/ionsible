@@ -92,3 +92,19 @@ export function shrinkRect(arect : Rect, brect : Rect) : Rect {
       , r: aR.r - bR.r
     };
 }
+
+/**
+ * Clamps an expression of radians to between positive 0 and TAU.
+ */
+export function clampRadians(dir : number) : number {
+    let tau = Math.PI * 2;
+    if (dir < 0) {
+        dir = -dir % tau;
+        dir = tau - dir;
+    }
+    else {
+        dir %= tau;
+    }
+
+    return dir;
+}
