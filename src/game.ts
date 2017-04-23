@@ -9,8 +9,14 @@ import {
   , IPositionedDrawable
   , IUpdatable
   , isSpriteContainer
+  , isISprite
+  , isUpdatable
+  , isPositionedDrawable
 } from "./sprite"
 import { Rect, getXYWH } from "./shape";
+
+export type SceneElement = ISprite | ISpriteContainer;
+export type Scene = SceneElement[];
 
 /**
  * Responsibilities:
@@ -104,7 +110,7 @@ export class Game {
     /** Toggle the paused state of the game. */
     togglePause() : void { this.paused = !this.paused; }
 
-    private scene : ISprite[];
+    private scene : Scene;
     /**
      * Sets the active sprites to update and draw.
      *
@@ -112,7 +118,7 @@ export class Game {
      * (arrays of sprites) unless you want them to update across all
      * scenes. Always use separate instances to avoid this.
      */
-    setScene(scene : ISprite[]) {
+    setScene(scene : Scene) {
         this.scene = scene;
     }
 
@@ -125,10 +131,12 @@ export class Game {
      */
     public maxFramesSkipped : number = 5;
 
-    private updateScene(scene : ISprite[], delta : Duration) {
+    private updateScene(scene : Scene, delta : Duration) {
         scene.forEach(
-            (arg : IUpdatable & (any | ISpriteContainer)) => {
-                arg.update(delta);
+            (arg : SceneElement) => {
+                if (isUpdatable(arg)) {
+                    arg.update(delta);
+                }
                 if (isSpriteContainer(arg)) {
                     this.updateScene(arg.subsprites, delta);
                 }
@@ -187,7 +195,7 @@ export interface ICamera extends IUpdatable {
     readonly context : CanvasRenderingContext2D;
 
     /** Render a scene of objects, after adjusting for camera position and rotation. */
-    render(scene : IPositionedDrawable[]) : void;
+    render(scene : Scene) : void;
 }
 
 export class Camera implements ICamera {
@@ -209,11 +217,12 @@ export class Camera implements ICamera {
      */
     public drawBB : boolean = false;
 
-    public render(scene : IPositionedDrawable[]) {
+    public render(scene : Scene) {
         let c = this.context;
 
         // Adjust canvas for camera position and rotation.
         //    First, save the current canvas state:
+        c.setTransform(1, 0, 0, 1, 0, 0);
         c.save();
 
         //    Next, set up coords so origin is in canvas center, and y axis goes upward
@@ -222,7 +231,7 @@ export class Camera implements ICamera {
         c.scale(1, -1);
 
         //    Now do the actual camera fixes.
-        if (this.pos.x != 0 || this.pos.y != 0)
+        if (true && (this.pos.x != 0 || this.pos.y != 0))
             c.translate(-this.pos.x, -this.pos.y);
         
         if (this.rotation != 0)
@@ -230,50 +239,67 @@ export class Camera implements ICamera {
 
         // Now, draw each scene element.
         scene.forEach(
-            (arg : IPositionedDrawable & (any | ISpriteContainer)) => {
+            (arg : SceneElement) => {
                 c.beginPath();
-                c.save();
 
-                try {
-                    // Translate
-                    if (arg.pos.x != 0 || arg.pos.y != 0)
-                        c.translate(arg.pos.x, arg.pos.y);
-
-                    // Rotate
-                    if (arg.rotation != 0)
-                        c.rotate(arg.rotation);
-
-                    arg.draw(c);
-                } finally {
-                    // Restore
-                    c.restore();
-                }
-
-                // Draw bounds
-                if (this.drawBB) {
-                    (<any[]>scene).forEach(
-                        (arg : any) => {
-                            if (!(arg.body && arg.body.bounds))
-                                return;
-                            c.save();
-
-                            // Translate
+                if (isPositionedDrawable(arg)) {
+                    c.save();
+                    try {
+                        // Translate
+                        if (arg.pos.x != 0 || arg.pos.y != 0) {
                             c.translate(arg.pos.x, arg.pos.y);
-
-                            c.lineWidth = 1;
-                            c.strokeStyle = 'lime';
-                            let {x, y, w, h} = getXYWH(<Rect>arg.body.bounds);
-                            c.strokeRect(x, y, w, h);
-
-                            // Restore
-                            c.restore();
                         }
-                    );
+
+                        // Rotate
+                        if (arg.rotation != 0) {
+                            c.rotate(arg.rotation);
+                        }
+
+                        arg.draw(c);
+                    } finally {
+                        // Restore
+                        c.restore();
+                    }
+
+                    // Draw bounds
+                    if (this.drawBB) {
+                        // XXX: Ew.
+                        (<any[]>scene).forEach(
+                            (arg : any) => {
+                                if (!(arg.body && arg.body.bounds))
+                                    return;
+                                c.save();
+
+                                try {
+                                    // Translate
+                                    c.translate(arg.pos.x, arg.pos.y);
+
+                                    c.lineWidth = 1;
+                                    c.strokeStyle = 'lime';
+                                    let {x, y, w, h} = getXYWH(<Rect>arg.body.bounds);
+                                    c.strokeRect(x, y, w, h);
+                                }
+                                finally {
+                                    // Restore
+                                    c.restore();
+                                }
+                            }
+                        );
+                    }
                 }
 
                 // Recurse
                 if (isSpriteContainer(arg)) {
-                    this.render(arg.subsprites);
+                    c.save()
+                    try {
+                        // Is this the best way to do this? Need to restore
+                        // identity matrix. Could be other things I'd need to restore too...
+                        c.setTransform(1, 0, 0, 1, 0, 0);
+                        this.render(arg.subsprites);
+                    }
+                    finally {
+                        c.restore();
+                    }
                 }
             }
         );

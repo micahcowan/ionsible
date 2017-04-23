@@ -48,6 +48,11 @@ export interface IPositionedDrawable extends IDrawable {
     autoRotate: boolean;
 }
 
+export function isPositionedDrawable(b : any | IPositionedDrawable) : b is IPositionedDrawable {
+    return typeof b.pos === "object" && typeof b.rotation === "number"
+        && typeof b.autoRotate === "boolean";
+}
+
 /**
  * Interface for things that are updated by the game.
  */
@@ -59,6 +64,10 @@ export interface IUpdatable {
      * and behavior should be overridden via the `.behaviors` field.
      */
     update(delta: Duration) : void;
+}
+
+export function isUpdatable(b : any | IUpdatable) : b is IUpdatable {
+    return (b.update !== undefined && b.update !== null)
 }
 
 export interface IDestroyable {
@@ -74,6 +83,10 @@ export function isDestroyable(b : any | IDestroyable) : b is IDestroyable {
  * both features.
  */
 export interface ISprite extends IPositionedDrawable, IUpdatable, IDestroyable {
+}
+
+export function isISprite(b : any | ISprite) : b is ISprite {
+    return isPositionedDrawable(b) && isUpdatable(b) && isDestroyable(b);
 }
 
 /**
