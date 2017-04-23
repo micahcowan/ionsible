@@ -188,6 +188,9 @@ export interface ICamera extends IUpdatable {
     /** The camera's rotation (in radians). */
     rotation : number;
 
+    /** A constant scale */
+    scale : number;
+
     /** The canvas to which scenes shall be rendered. */
     readonly canvas : HTMLCanvasElement;
 
@@ -202,6 +205,7 @@ export class Camera implements ICamera {
     public pos : Point = point(0, 0);
     public rotation : number = 0;
     public context : CanvasRenderingContext2D;
+    public scale : number = 1;
 
     constructor(public game : Game, public canvas : HTMLCanvasElement) {
         let context = canvas.getContext("2d");
@@ -229,6 +233,9 @@ export class Camera implements ICamera {
         //    (standard cartesian format)
         c.translate(this.canvas.width/2, this.canvas.height/2);
         c.scale(1, -1);
+
+        if (this.scale != 1)
+            c.scale(this.scale, this.scale);
 
         if (this.rotation != 0)
             c.rotate(-this.rotation);
