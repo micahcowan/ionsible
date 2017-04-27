@@ -231,7 +231,7 @@ export class Camera implements ICamera {
         //    Next, set up coords so origin is in canvas center, and y axis goes upward
         //    (standard cartesian format)
         c.translate(this.canvas.width/2, this.canvas.height/2);
-        c.scale(1, -1);
+        //c.scale(1, -1);
 
         if (this.scale != 1)
             c.scale(this.scale, this.scale);
