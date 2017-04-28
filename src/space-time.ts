@@ -92,7 +92,7 @@ export interface BasicXY {
  * A generic type providing the common definition for
  * the Point, Velocity, and Acceleration classes,
  * allowing a Point to be advanced by a Velocity over time (Duration),
- * or a Velocity to be advanced by an Acceleration over time.
+ * or a Celocity to be advanced by an Acceleration over time.
  * If a third derivative is called for (unlikely?), an Acceleration is
  * advanced by any unspecified BasicXY (this allows advancing an
  * Acceleration by a Point or Velocity, but this is not encouraged).
@@ -113,9 +113,8 @@ export class DerivablePoint<D extends BasicXY> {
         }
         else {
             let dm = x;
-            let xy = xyFromDirMag(dm);
-            this._x = xy.x;
-            this._y = xy.y;
+            this._x = dm.mag * Math.cos(dm.dir)
+            this._y = dm.mag * Math.sin(dm.dir)
         }
     }
     /** Return a copy of this Point, Velocity, or Acceleration. */
@@ -212,16 +211,15 @@ export class DerivablePoint<D extends BasicXY> {
  * Since it's a type alias, you can't call `new Point(x, y)`;
  * use the factory function `point()` instead.
  */
-export class Point extends DerivablePoint<Velocity> implements BasicXY {}
+export type Point = DerivablePoint<Acceleration>;
 
-//export type Point = DerivablePoint<Velocity>;
 /**
  * A Velocity is advanced by Acceleration over time.
  * Since it's a type alias, you can't call `new Velocity(x, y)`;
  * use the factory function `veloc()` instead.
  */
-export class Velocity extends DerivablePoint<Acceleration> implements BasicXY {}
-//export type Velocity = DerivablePoint<Acceleration>;
+export type Velocity = DerivablePoint<Acceleration>;
+
 /**
  * An Acceleration isn't normally advanced, but it can be.
  * We're relaxing its rules and letting it be advanced by anything with
@@ -230,31 +228,49 @@ export class Velocity extends DerivablePoint<Acceleration> implements BasicXY {}
  * Since it's a type alias, you can't call `new Acceleration(x, y)`;
  * use the factory function `accel()` instead.
  */
-export class Acceleration extends DerivablePoint<BasicXY> implements BasicXY {}
-//export type Acceleration = DerivablePoint<BasicXY>;
+export type Acceleration = DerivablePoint<BasicXY>;
 
-/** Create a new Point. */
-export function point(x : number = 0, y : number = 0) : Point {
-    return new DerivablePoint<Velocity>(x, y);
+// Would make a template once and instantiate it thrice, but TS doesn't currently
+// support assigning a template function instantiation to a variable...
+/** Create a new [[Point]]. Convenience, since [[Point]] is a type alias and you can't do `new Point()...`  */
+export function point(dm : DirMag) : Point;
+export function point(x? : number, y? : number) : Point;
+export function point(x : any = 0, y : any = 0) : Point {
+    if (typeof x == "number" || typeof x === undefined)
+        return new DerivablePoint<Velocity>(x, y);
+    else
+        return new DerivablePoint<Velocity>(x);
 }
-/** Create a new Velocity. */
-export function veloc(x : number = 0, y : number = 0) : Velocity {
-    return new DerivablePoint<Acceleration>(x, y);
+
+/** Create a new [[Velocity]]. Convenience, since [[Velocity]] is a type alias and you can't do `new Velocity()...`  */
+export function veloc(dm : DirMag) : Velocity;
+export function veloc(x? : number, y? : number) : Velocity;
+export function veloc(x : any = 0, y : any = 0) : Velocity {
+    if (typeof x == "number" || typeof x === undefined)
+        return new DerivablePoint<Acceleration>(x, y);
+    else
+        return new DerivablePoint<Acceleration>(x);
 }
-/** Create a new Acceleration. */
-export function accel(x : number = 0, y : number = 0) : Acceleration {
-    return new DerivablePoint<BasicXY>(x, y);
+
+/** Create a new [[Acceleration]]. Convenience, since [[Acceleration]] is a type alias and you can't do `new Acceleration()...`  */
+export function accel(dm : DirMag) : Acceleration;
+export function accel(x? : number, y? : number) : Acceleration;
+export function accel(x : any = 0, y : any = 0) : Acceleration {
+    if (typeof x == "number" || typeof x === undefined)
+        return new DerivablePoint<BasicXY>(x, y);
+    else
+        return new DerivablePoint<BasicXY>(x);
 }
 
 /** A direction (in radians), and a magnitude. */
 export type DirMag = { dir: number, mag: number };
 
 /**
- * Returns a DerivablePoint from a DirMag (reverse of `.asDirMag()`)
+ * Accelerates toward a given point.
  */
-export function xyFromDirMag(dm : DirMag) : BasicXY {
-    return {
-        x: dm.mag * Math.cos(dm.dir)
-      , y: dm.mag * Math.sin(dm.dir)
-    };
+export function accelToward(from : Point, to : Point, tm : Duration, mag : number) : Velocity {
+        let dm = to.diff(from).asDirMag();
+        dm.mag = mag;
+        let acc = accel(dm);
+        return veloc(0, 0).advanced(acc, tm);
 }

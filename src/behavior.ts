@@ -21,7 +21,6 @@ import {
   , Duration
   , accel
   , veloc
-  , xyFromDirMag
 } from "./space-time";
 import {
     DynamicRect
@@ -292,8 +291,7 @@ class FrictionClass extends BehaviorFac implements IUpdatable {
         }
         else {
             dirMag.mag -= adjFric;
-            let xy = xyFromDirMag(dirMag);
-            spr.vel = veloc(xy.x, xy.y);
+            spr.vel = veloc(dirMag);
         }
     }
 }
@@ -320,8 +318,7 @@ class SpeedLimitedClass extends BehaviorFac implements IUpdatable {
         let dm = spr.vel.asDirMag();
         if (dm.mag > this.limit)
             dm.mag = this.limit;
-        let xy = xyFromDirMag(dm)
-        spr.vel = veloc(xy.x, xy.y);
+        spr.vel = veloc(dm);
     }
 }
 
