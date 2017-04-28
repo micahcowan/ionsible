@@ -5,9 +5,10 @@
  *
  *     import * as ion from "ionsible"
  *
- * Then you would refer to the behavior `Momentum` in this module as
+ * Then you would refer to the behavior [[Momentum]] in this module as
  * `ion.b.Momentum`.
  */
+/** Useless docstring for import */
 import {
     IUpdatable
   , IDestroyable
@@ -63,7 +64,7 @@ class MomentumClass extends BehaviorFac implements IUpdatable {
  * Advances the sprite's `pos` by `vel` at each tick.
  * Does _not_ advance `vel` by `accel`.
  *
- * Consider using `SpeedRamp` instead.
+ * Consider using [[SpeedRamp]] instead.
  */
 export let Momentum : IBehaviorFactory
     = (game, sprite) => new MomentumClass(game, sprite);
@@ -77,7 +78,7 @@ class AccelerationClass extends BehaviorFac implements IUpdatable {
 /**
  * Advances the sprite's `vel` by `accel` at each tick.
  *
- * Consider using `SpeedRamp` instead.
+ * Consider using [[SpeedRamp]] instead.
  */
 export let Acceleration : IBehaviorFactory
     = (game, sprite) => new AccelerationClass(game, sprite);
@@ -115,6 +116,10 @@ class BoundedClass extends BehaviorFac implements IUpdatable {
 
 /**
  * A behavior that maps keypresses to user-specified handler functions.
+ * 
+ * This behavior continuously invokes the callback for as long
+ * as the key is being held. For reaction to just `keyDown` and `keyUp`
+ * events, use [[OnKey]] instead.
  */
 export function HandleKeys(keys: ActionKeysHandlerMap | ActionKeysHandlerMap[])
         : IBehaviorFactory {
@@ -131,7 +136,7 @@ export type ActionKeysHandlerMap = {
 }
 
 /**
- * A callback for use with `HandleKeys`.
+ * A callback for use with [[HandleKeys]].
  */
 export interface KeyHandlerCallback {
     (game : Game, sprite : Sprite, delta : Duration) : void;
@@ -222,8 +227,6 @@ class RotateKeysClass extends BehaviorFac implements IUpdatable {
     }
 }
 
-//export type RotateKeysMap = { clock: string[] | string, counter: string[] | string };
-
 class ThrustKeysClass extends BehaviorFac implements IUpdatable, IDestroyable {
     private mk : Keys;
 
@@ -299,7 +302,7 @@ class FrictionClass extends BehaviorFac implements IUpdatable {
 /**
  * A behavior that applies a friction to the momentum of a sprite.
  *
- * Consider using `SpeedRamp` instead.
+ * Consider using [[SpeedRamp]] instead.
  */
 export function Friction(strength : number)
         : IBehaviorFactory {
@@ -325,7 +328,7 @@ class SpeedLimitedClass extends BehaviorFac implements IUpdatable {
 /**
  * A behavior that applies a limit to sprite velocity.
  *
- * Consider using `SpeedRamp` instead.
+ * Consider using [[SpeedRamp]] instead.
  */
 export function SpeedLimited(limit : number)
         : IBehaviorFactory {
@@ -344,10 +347,10 @@ class ThrustClass extends BehaviorFac implements IUpdatable {
 }
 
 /**
- * A behavior that multiplies the thrust determined by `ThrustKeys`, to
+ * A behavior that multiplies the thrust determined by [[ThrustKeys]], to
  * produce the desired amount of total acceleration. 
  *
- * Consider using `SpeedRamp` instead of this.
+ * Consider using [[SpeedRamp]] instead of this.
  */
 export function Thrust(strength : number) : IBehaviorFactory {
     return (game : Game, sprite : Sprite) =>
@@ -392,12 +395,13 @@ class SpeedRampClass extends BehaviorFac implements IUpdatable, IDestroyable {
 }
 
 /**
- * Combines Thrust, Acceleration, Friction, SpeedLimited, and Momentum,
+ * Combines [[Thrust]], [[Acceleration]], [[Friction]], [[SpeedLimited]], and [[Momentum]],
  * in one behavior.
  *
- * Preface this behavior with `ThrustKeys`.
+ * Preface this behavior with a [[ThrustKeys]] behavior.
+ * 
  * This behavior will calculate the appropriate thrust factor based on
- * its arguments, and multiply the results from ThrustKeys by it.
+ * its arguments, and multiply the results from [[ThrustKeys]] by it.
  *
  * @param maxSpeed The maximum allowed speed for the sprite
  * @param rampUp The number of seconds required to reach max speed.
@@ -447,6 +451,10 @@ export function OnKey(spec : KeyHandlerSpec) : IBehaviorFactory {
         new OnKeyClass(game, sprite, spec);
 }
 
+/**
+ * Callback specification that triggers once on `keyUp` or `keyDown`,
+ * rather than continuously as the key is held, as [[HandleKeys]] does.
+ */
 export type KeyHandlerSpec = {
     keyUp?: string | string[]
   , keyDown?: string | string[]

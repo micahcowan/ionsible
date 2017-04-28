@@ -1,13 +1,17 @@
 /**
  * Facilities for defining bounds and bodies.
  *
- * Actual body classes are defined in the `"body"` module.
+ * Actual body classes are defined in the `body` module (see link at right).
  */
 
+/** Useless docstring for import */
 import { Point } from "./space-time";
 import { Sprite } from "./sprite";
 
-/** Rectangle represented as top, left, bottom, right. */
+/** Rectangle represented as top, left, bottom, right.
+ *
+ * Example: `{ t: 0, l: 0, b: 480, r: 640 }`
+*/
 export type TLBR = {
     t : number
   , l : number
@@ -15,7 +19,14 @@ export type TLBR = {
   , r : number
 };
 
-/** Rectangle represented as x, y, width, height. */
+/**
+ * Rectangle represented as x, y, width, height.
+ * The `x` and `y` are the top-left corner, as `t`
+ * and `r` are in [[TLBR]]; but instead of bottom
+ * and right coordinates, width and height are used.
+ *
+ * Example: `{ x: 0, y: 0, w: 480, h: 640 }`
+*/
 export type XYWH = {
     x : number
   , y : number
@@ -26,7 +37,12 @@ export type XYWH = {
 /** Rectangle by any other name... */
 export type Rect = TLBR | XYWH;
 
-/** Get a TLBR rectangle from either representation. */
+/**
+ * Get a [[TLBR]] rectangle representation,
+ * 
+ * @param arg A rectangle in either [[TLBR]] or [[XYWH]] notation.
+ * @return A rectangle in [[TLBR]] notation.
+ */
 export function getTLBR(arg : Rect) : TLBR {
     let tlbr = <TLBR>arg;
     let xywh = <XYWH>arg;
@@ -44,7 +60,12 @@ export function getTLBR(arg : Rect) : TLBR {
     }
 }
 
-/** Get a XYWH rectangle from either representation. */
+/**
+ * Get a [[XYWH]] rectangle representation,
+ * 
+ * @param arg A rectangle in either [[TLBR]] or [[XYWH]] notation.
+ * @return A rectangle in [[XYWH]] notation.
+ */
 export function getXYWH(arg : Rect) : XYWH {
     let tlbr = <TLBR>arg;
     let xywh = <XYWH>arg;
@@ -78,7 +99,7 @@ export interface Exceed {
 }
 
 /**
- * Tests whether an Exceed value represents an exceeded boundary.
+ * Tests whether an [[Exceed]] value represents an exceeded boundary.
  *
  * @returns `true` unless `x` and `y` are both 0.
  */

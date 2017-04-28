@@ -1,11 +1,12 @@
 /**
- * Body class definitions, implementing the `IBody` interface from
+ * Body class definitions, implementing the [[IBody]] interface from
  * the `"shape"` module.
  *
  * This module is normally imported under a `body` sub-namespace. For
  * example, `ion.body.Circle`.
  */
 
+/** Useless docstring for imports */
 import { IBody, Rect } from "./shape";
 import { Point } from "./space-time";
 import { IPositionedDrawable } from "./sprite";

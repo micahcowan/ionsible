@@ -2,6 +2,7 @@
  * Provides the `Game` class, which manages setting up and starting the
  * game.
  */
+/** useless import docstring */
 import { Timestamp, Duration, Point, point } from "./space-time"
 import {
     ISprite
@@ -15,7 +16,10 @@ import {
 } from "./sprite"
 import { Rect, getXYWH } from "./shape";
 
+/** The type of thing that is allowed in a [[Scene]]. */
 export type SceneElement = ISprite | ISpriteContainer;
+
+/** Specifies a set of objects to draw and update ([[SceneElement]]s). */
 export type Scene = SceneElement[];
 
 /**
@@ -25,11 +29,11 @@ export type Scene = SceneElement[];
  *   paused/not paused, or elapsed game time),
  *   and other publicly accessible objects tied
  *   single game instances.
- * - Maintain a registry of Sprite objects, to update and/or display
+ * - Maintain a registry of sprites ([[ISprite]]), to update and/or display
  */
 export class Game {
     /**
-     * Constructs a new Game, creating an HTMLCanvasElement and
+     * Constructs a new [[Game]], creating an `HTMLCanvasElement` and
      * inserting it into the current document. Arguments are provided
      * via a single JS object, simulating keyword args.
      *
@@ -81,9 +85,10 @@ export class Game {
     /** Reference to the canvas element created at construction time. */
     public canvas : HTMLCanvasElement;
 
-    public camera : Camera;
+    /** The primary camera for rendering to canvas. */
+    public camera : ICamera;
 
-    /** Center point on the camera. */
+    /** Center point of the canvas. */
     public get center() : Point {
         return point(this.canvas.width/2, this.canvas.height/2);
     }
@@ -97,8 +102,8 @@ export class Game {
     /**
      * The paused/not paused status of the game.
      *
-     * During paused state, the game continues to call `.draw()` for all
-     * sprites, but will no longer call `.update()` until the game is
+     * During paused state, the game continues to call `.draw()` ([[IDrawable.draw]]) for all
+     * sprites, but will no longer call `.update()` ([[IUpdatable.update]]) until the game is
      * unpaused again.
      */
     public paused : boolean = false;
@@ -111,6 +116,7 @@ export class Game {
     togglePause() : void { this.paused = !this.paused; }
 
     private scene : Scene;
+
     /**
      * Sets the active sprites to update and draw.
      *
@@ -200,6 +206,7 @@ export interface ICamera extends IUpdatable {
     render(scene : Scene) : void;
 }
 
+/** A concrete implementation of [[ICamera]] */
 export class Camera implements ICamera {
     public pos : Point = point(0, 0);
     public rotation : number = 0;
@@ -220,6 +227,9 @@ export class Camera implements ICamera {
      */
     public drawBB : boolean = false;
 
+    /**
+     * Draw all objects in the scene to the canvas.
+     */
     public render(scene : Scene) {
         let c = this.context;
 

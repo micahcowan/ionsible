@@ -1,5 +1,5 @@
 /**
- * Keys exports just the single default export, the `Keys` class.
+ * Keys exports just the single default export, the [[Keys]] class.
  */
 
 /**
@@ -10,7 +10,7 @@
 export class Keys {
     /**
      * A mapping of key names, and associated handlers.
-     * Called on `.pulse()`; see the `.connect()` method.
+     * Called on [[Keys.pulse]]; see the [[Keys.connect]] method.
      */
     private connections : KeyHandlerMap = {};
 
@@ -18,7 +18,7 @@ export class Keys {
      * A mapping of key names, and associated handlers,
      * called when the key is pressed.
      *
-     * The handlers are registered via `.onDown()`.
+     * The handlers are registered via [[Keys.onDown]]`.
      */
     private downs       : KeyHandlerMap = {};
 
@@ -26,7 +26,7 @@ export class Keys {
      * A mapping of key names, and associated handlers,
      * called when the key is lifted.
      *
-     * The handlers are registered via `.onUp()`.
+     * The handlers are registered via [[Keys.onUp]].
      */
     private ups         : KeyHandlerMap = {};
 
@@ -37,13 +37,13 @@ export class Keys {
     private keys        : KeySet = {};
 
     /**
-     * Used to hold a reference to an `ActionSet` currently being
-     * constructed from a call to `.pulse()`.
+     * Used to hold a reference to an [[ActionSet]] currently being
+     * constructed from a call to [[Keys.pulse]]().
      */
     private actionTracker : ActionSet;
 
     /**
-     * Constructs a new `Keys` object, registering internal key event
+     * Constructs a new [[Keys]] object, registering internal key event
      * handlers.
      */
     constructor(private target : EventTarget = window) {
@@ -62,7 +62,7 @@ export class Keys {
 
     /**
      * Connects keys to handlers. These handlers are called neither on
-     * keyUp, nor on keyDown, but upon an invocation of `.pulse()`
+     * `keyUp`, nor on `keyDown`, but upon an invocation of [[Keys.pulse]]()
      * occurring while the associated key is pressed.
      */
     public connect(key : string, handler : () => void) : void {
@@ -71,7 +71,7 @@ export class Keys {
 
     /**
      * Register an association for a number of keys, to string labels.
-     * Then, when `.pulse()` is called, it will return the set of string
+     * Then, when [[Keys.pulse]]() is called, it will return the set of string
      * labels that have been associated with keys that are currently
      * pressed.
      */
@@ -113,7 +113,7 @@ export class Keys {
      * is a function.
      *
      * Marks the given key as currently pressed (adding it to the
-     * `keys` set), and calls any handlers registered via `.onDown()`.
+     * `keys` set), and calls any handlers registered via [[Keys.onDown]]().
      *
      * Will prevent the event from triggering the default behavior,
      * unless a modifier key accompanied it.
@@ -141,7 +141,7 @@ export class Keys {
      *
      * Unmarks the given key as currently pressed (removing it from
      * the `keys` set), and calls any handlers registered via
-     * `.onUp()`.
+     * [[Keys.onUp]]().
      *
      * Will prevent the event from triggering the default behavior,
      * unless a modifier key accompanied it.
@@ -163,8 +163,8 @@ export class Keys {
     }
 
     /**
-     * Decide whether or not to prevent further processing of a key
-     * event (and then do so, if decided).
+     * Conditionally prevents further downstream processing of a key,
+     * if modifier keys (like control or command) are involved.
      */
     public maybeContinue(keys : string[], e : KeyboardEvent) {
         if (!(e.altKey || e.ctrlKey || e.metaKey)) {
@@ -228,7 +228,7 @@ export class Keys {
     }
 
     /**
-     * Return the labels for the sets of keys registered via `.actions()`,
+     * Return the labels for the sets of keys registered via [[Keys.actions]](),
      * corresponding to keys that are currently pressed.
      */
     public pulse() : ActionSet {
@@ -243,6 +243,7 @@ export class Keys {
     }
 }
 
+/** A callback function used when a key has been pressed. */
 export interface KeyHandler {
     (ev? : KeyboardEvent): any;
 }
@@ -255,6 +256,7 @@ export interface KeyHandler {
  */
 type KeyHandlerMap = {[key: string] : KeyHandler};
 
+// private
 /**
  * Set of keys (via string name).
  *
@@ -274,8 +276,8 @@ type KeySet = {[key: string] : boolean};
 export type ActionKeysMap = { [label: string] : string[] | string }
 
 /**
- * A set of string labels, returned by `k.pulse()` (where `k` is an
- * instance of `Keys`), reflecting a group of keys, one of which is
+ * A set of string labels, returned by [[Keys.pulse]](),
+ * reflecting a group of keys, one of which is
  * currently pressed.
  *
  * Not a true `Set` instance, but an object, for compatibility with ES 5

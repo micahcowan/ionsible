@@ -1,7 +1,8 @@
 /**
- * Provides the `Sprite` class, and various related interfaces.
+ * Provides the [[Sprite]] class, and various related interfaces.
  */
 
+/** Useless docstring for import */
 import {
     Duration
   , Point
@@ -42,12 +43,14 @@ export interface IPositionedDrawable extends IDrawable {
     rotation: number;
 
     /**
-     * Whether rotation should be applied before the game calls our
-     * `.draw()` method.
+     * Whether rotation should be applied before the game calls
+     * [[IDrawable.draw]]() (alleviating the need for the rotation
+     * to be done within [[IDrawable.draw]]() itself).
      */
     autoRotate: boolean;
 }
 
+/** Facility to determine whether an object is an [[IPositionedDrawable]] */
 export function isPositionedDrawable(b : any | IPositionedDrawable) : b is IPositionedDrawable {
     return typeof b.pos === "object" && typeof b.rotation === "number"
         && typeof b.autoRotate === "boolean";
@@ -61,43 +64,49 @@ export interface IUpdatable {
      * Updates sprite state (usually, position and such)
      *
      * Normally, the implementation in the Sprite class should be used,
-     * and behavior should be overridden via the `.behaviors` field.
+     * and behavior should be overridden via the [[Sprite.behaviors]] field.
      */
     update(delta: Duration) : void;
 }
 
+/** Facility to determine whether the argument is an [[IUpdatable]]. */
 export function isUpdatable(b : any | IUpdatable) : b is IUpdatable {
     return (b.update !== undefined && b.update !== null)
 }
 
+/** An interface that provides a destructor (cleanup function). */
 export interface IDestroyable {
     destroy() : void;
 }
 
+/** An interface to determine whether the object is an [[IDestroyable]]. */
 export function isDestroyable(b : any | IDestroyable) : b is IDestroyable {
     return (b.destroy !== undefined && b.destroy !== null);
 }
 
 /**
- * Sprites are both updated, and drawn to canvas, so ISprite combines
- * both features.
+ * Sprites are both updated, and drawn to canvas, so [[ISprite]] combines
+ * both features, as well as a destruction facility.
  */
 export interface ISprite extends IPositionedDrawable, IUpdatable, IDestroyable {
 }
 
+/**
+ * Facility to determine whether the argument implements [[ISprite]].
+ */
 export function isISprite(b : any | ISprite) : b is ISprite {
     return isPositionedDrawable(b) && isUpdatable(b) && isDestroyable(b);
 }
 
 /**
- * A "factory function" that produces an `IUpdatable`.
+ * A "factory function" that produces an [[IUpdatable]].
  */
 export interface IBehaviorFactory {
     (game : Game, sprite : Sprite) : IUpdatable;
 }
 
 /**
- * A container type for Sprites.
+ * A container type for sprites.
  */
 export interface ISpriteContainer {
     subsprites : ISprite[];
@@ -109,11 +118,11 @@ export function isSpriteContainer(arg : any | ISpriteContainer)
 }
 
 /**
- * The `Sprite` class. The top-level `Game` object neither knows nor
- * cares about the `Sprite` class, just objects that implement the
- * `ISprite` interface. However, the `Sprite` class provides facilities
+ * The sprite class. The top-level [[Game]] object neither knows nor
+ * cares about the [[Sprite]] class, only that sprites implement the
+ * [[ISprite]] interface. However, the [[Sprite]] class provides facilities
  * to ease the creation of objects that supply that interface; most
- * notably through the use of the `behaviors` mechanism.
+ * notably through the use of the [[Sprite.behaviors]] mechanism.
  */
 export class Sprite implements ISprite {
     /** Sprite position. */
@@ -134,13 +143,19 @@ export class Sprite implements ISprite {
     /**
      * A list of behaviors that the sprite will have.
      * This is usually the most important member to override in
-     * descendant classes of `Sprite`.
+     * descendant classes of [[Sprite]].
+     * 
+     * The factory functions contained in this list are invoked
+     * the first time that [[Sprite.update]]() is called, to
+     * produce the real behaviors ([[IUpdatable]] objects)
+     * that are used from then on to produce various effects
+     * on update.
      */
     protected behaviors : IBehaviorFactory[] | undefined = [];
 
     /**
      * The list of instantiated behaviors. The value is derived from `behaviors`
-     * upon `Sprite` construction.
+     * at the first [[Sprite.update]]() call.
      */
     protected behaviorsInst : IUpdatable[];
 
@@ -158,13 +173,9 @@ export class Sprite implements ISprite {
      */
     protected reg : any
 
-    /**
-     * Creates a new `Sprite` instance, and instanciates all the
-     * behaviors from the `behaviors` declaration.
-     */
     constructor (public game : Game) {}
 
-    /** Default implementation calls `.update` on the behaviors. */
+    /** Default implementation calls [[IUpdatable.update]] on the behaviors. */
     update(delta : Duration) : void {
         // Ugh. Wanted this to be in the constructor, but TypeScript (as
         // of 1.8.10) calls constructors before evaluating member
@@ -182,7 +193,7 @@ export class Sprite implements ISprite {
         );
     }
 
-    /** Default implementation calls `drawer.draw`. */
+    /** Default implementation calls `drawer.draw()`. */
     draw(c : CanvasRenderingContext2D) : void {
         if (this.drawer !== undefined && this.drawer !== null) {
             this.drawer.draw(c);

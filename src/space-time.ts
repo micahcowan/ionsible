@@ -5,14 +5,16 @@
  */
 
 /**
- * Represents a moment in time. Wraps the builtin Date class.
+ * Represents a moment in time. Wraps the JavaScript builtin Date class,
+ * providing an interface that allows the user to disregard
+ * whether representation is in seconds or milliseconds.
  */
 export class Timestamp {
     private _stamp : number;
 
     /**
-     * Constructs a new Timestamp, given either a Date object or another
-     * Timestamp.
+     * Constructs a new [[Timestamp]], given either a `Date` object or another
+     * [[Timestamp]].
      *
      * If no argument is provided, defaults to the current time.
      */
@@ -28,7 +30,7 @@ export class Timestamp {
     }
 
     /**
-     * subtracts a timestamp `t` from this one, producing a Duration
+     * Subtracts a [[Timestamp]] `t` from this one, producing a [[Duration]]
      * result.
      */
     sub(t : Timestamp) : Duration {
@@ -43,11 +45,11 @@ export class Duration {
     private _ms : number;
 
     /**
-     * Constructs a Duration, given either another Duration, or a
+     * Constructs a [[Duration]], given either another Duration, or a
      * number of milliseconds.
      *
-     * The number form of argument is intended for use by `Timestamp`'s
-     * `.sub()` method only. (Typescript doesn't currently provide a
+     * The number form of argument is intended for use by [[Timestamp.sub]]()
+     * only. (TypeScript doesn't currently provide a
      * means of enforcing that.)
      */
     constructor(ms : Duration | number) {
@@ -62,7 +64,6 @@ export class Duration {
 
     /**
      * return the duration in seconds.
-     *     dur.s
      */
     get s() : number {
         return this._ms / 1000;
@@ -70,7 +71,6 @@ export class Duration {
 
     /**
      * return the duration in milliseconds.
-     *     dur.ms
      */
     get ms() : number {
         return this._ms;
@@ -79,7 +79,7 @@ export class Duration {
 
 /**
  * Any type with an x and a y component.
- * Point, Velocity, and Acceleration implement this.
+ * [[Point]], [[Velocity]], and [[Acceleration]] implement this.
  * Only used internally - but has to be exported because generic classes
  * that use it are exported.
  */
@@ -90,16 +90,18 @@ export interface BasicXY {
 
 /**
  * A generic type providing the common definition for
- * the Point, Velocity, and Acceleration classes,
- * allowing a Point to be advanced by a Velocity over time (Duration),
- * or a Celocity to be advanced by an Acceleration over time.
+ * the [[Point]], [[Velocity]], and [[Acceleration]] classes,
+ * allowing a [[Point]] to be advanced by a [[Velocity]] over time ([[Duration]]),
+ * or a [[Velocity]] to be advanced by an [[Acceleration]] over time.
  * If a third derivative is called for (unlikely?), an Acceleration is
- * advanced by any unspecified BasicXY (this allows advancing an
- * Acceleration by a Point or Velocity, but this is not encouraged).
+ * advanced by any unspecified [[BasicXY]] (this allows advancing an
+ * [[Acceleration]] by a [[Point]] or [[Velocity]], but this is not encouraged).
  *
- * The intention is to force separation between a Position over time,
- * and its derivatives (Velocity, Acceleration), requiring time
- * (Duration) to be involved at each step.
+ * The intention is to force separation between a [[Position]] over time,
+ * and its derivatives ([[Velocity]], [[Acceleration]]), requiring time
+ * ([[Duration]]) to be involved at each step, and thereby reducing the likelihood
+ * that the user can forget to scale by time before adding to a position ([[Point]]),
+ * or accidentally use a velocity where they'd meant to use a position.
  */
 export class DerivablePoint<D extends BasicXY> {
     private readonly _x : number;
@@ -131,8 +133,8 @@ export class DerivablePoint<D extends BasicXY> {
      * Advance by an amount, adjusted by the amount of time that's
      * passed, and return the result (does not modify this).
      *
-     * If we're a Point, advances according to Velocity.
-     * If we're a Velocity, advances according to Acceleration.
+     * If we're a [[Point]], advances according to [[Velocity]].
+     * If we're a [[Velocity]], advances according to [[Acceleration]].
      */
     advanced(v : D, t : Duration) : DerivablePoint<D> {
         return new DerivablePoint<D>(
@@ -153,7 +155,7 @@ export class DerivablePoint<D extends BasicXY> {
     }
 
     /**
-     * Return an equivalent to this thing, as a DirMag (direction +
+     * Return an equivalent to this thing, as a [[DirMag]] (direction +
      * magnitude).
      */
     asDirMag() : DirMag {
@@ -165,6 +167,15 @@ export class DerivablePoint<D extends BasicXY> {
 
     /**
      * Returns the magnitude of this vector, as measured in a particular direction.
+     * The nearer that direction is to the vector's direction (or its opposite),
+     * the more it will approach the vector's own magnitude. Specifying a direction
+     * that is exactly perpendicular to the direction represented by `this`,
+     * will result in `0`.
+     *
+     * For example, if a sprite is traveling diagonally into a wall, you could specify
+     * a direction for `sprite.vel.magnitudeInDir(dir)` that points directly into the wall,
+     * to determine how hard a strike it is.
+     *
      * @param dir  the direction to measure in, expressed in radians
      */
     magnitudeInDir(dir: number) : number {
@@ -198,6 +209,7 @@ export class DerivablePoint<D extends BasicXY> {
 
     /**
      * Returns the distance between this and another DerivablePoint.
+     * The result is always positive.
      */
     distFrom(other : DerivablePoint<D>) : number {
         let h = this.x - other.x;
@@ -207,26 +219,26 @@ export class DerivablePoint<D extends BasicXY> {
 }
 
 /**
- * A Point is advanced by Velocity over time.
+ * A [[Point]] is advanced by [[Velocity]] over time.
  * Since it's a type alias, you can't call `new Point(x, y)`;
- * use the factory function `point()` instead.
+ * use the factory function [[point]]() instead.
  */
 export type Point = DerivablePoint<Acceleration>;
 
 /**
- * A Velocity is advanced by Acceleration over time.
+ * A [[Velocity]] is advanced by [[Acceleration]] over time.
  * Since it's a type alias, you can't call `new Velocity(x, y)`;
- * use the factory function `veloc()` instead.
+ * use the factory function [[veloc(]]() instead.
  */
 export type Velocity = DerivablePoint<Acceleration>;
 
 /**
- * An Acceleration isn't normally advanced, but it can be.
+ * An [[Acceleration]] isn't normally advanced, but it can be.
  * We're relaxing its rules and letting it be advanced by anything with
  * an x and y.
  *
  * Since it's a type alias, you can't call `new Acceleration(x, y)`;
- * use the factory function `accel()` instead.
+ * use the factory function [[accel]]() instead.
  */
 export type Acceleration = DerivablePoint<BasicXY>;
 
