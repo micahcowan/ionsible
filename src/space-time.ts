@@ -267,6 +267,13 @@ export type DirMag = { dir: number, mag: number };
 
 /**
  * Accelerates toward a given point.
+ * Internally, generates an [[Acceleration]] with the specified magnitude `mag`,
+ * and then invokes `veloc(0, 0).advanced(..., tm)` to produce the [[Velocity]] result.
+ *
+ * @param from  The starting point
+ * @param to    The point to accelerate toward
+ * @param tm    How much time has passed since previous frame (to scale acceleration)
+ * @param mag   The magnitude of the acceleration
  */
 export function accelToward(from : Point, to : Point, tm : Duration, mag : number) : Velocity {
         let dm = to.diff(from).asDirMag();
