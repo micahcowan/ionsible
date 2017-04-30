@@ -102,8 +102,8 @@ export function isISprite(b : any | ISprite) : b is ISprite {
 /**
  * A "factory function" that produces an [[IUpdatable]].
  */
-export interface IBehaviorFactory {
-    (game : Game, sprite : Sprite) : IUpdatable;
+export interface IBehaviorFactory<S extends Sprite> {
+    (game : Game, sprite : S) : IUpdatable;
 }
 
 /**
@@ -152,7 +152,7 @@ export class Sprite implements ISprite {
      * that are used from then on to produce various effects
      * on update.
      */
-    protected behaviors : IBehaviorFactory[] | undefined = [];
+    protected behaviors : IBehaviorFactory<this>[] | undefined = [];
 
     /**
      * The list of instantiated behaviors. The value is derived from `behaviors`
@@ -185,7 +185,7 @@ export class Sprite implements ISprite {
         this.lastPos = this.pos.clone();
         if (this.behaviors !== undefined) {
             this.behaviorsInst = this.behaviors.map(
-                (x : IBehaviorFactory) : IUpdatable => x(this.game, this)
+                (x : IBehaviorFactory<this>) : IUpdatable => x(this.game, this)
             );
             this.behaviors = undefined;
         }

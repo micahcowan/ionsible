@@ -69,7 +69,7 @@ class MomentumClass extends BehaviorFac implements IUpdatable {
  *
  * Consider using [[SpeedRamp]] instead.
  */
-export let Momentum : IBehaviorFactory
+export let Momentum : IBehaviorFactory<Sprite>
     = (game, sprite) => new MomentumClass(game, sprite);
 
 class AccelerationClass extends BehaviorFac implements IUpdatable {
@@ -83,7 +83,7 @@ class AccelerationClass extends BehaviorFac implements IUpdatable {
  *
  * Consider using [[SpeedRamp]] instead.
  */
-export let Acceleration : IBehaviorFactory
+export let Acceleration : IBehaviorFactory<Sprite>
     = (game, sprite) => new AccelerationClass(game, sprite);
 
 /**
@@ -94,7 +94,7 @@ export let Acceleration : IBehaviorFactory
  * @param cb The function to call when bounds are exceeded.
  */
 export function Bounded(drect : DynamicRect, cb : IBoundsCallback)
-        : IBehaviorFactory {
+        : IBehaviorFactory<Sprite> {
     return (game : Game, sprite : Sprite) =>
         new BoundedClass(game, sprite, drect, cb);
 }
@@ -125,7 +125,7 @@ class BoundedClass extends BehaviorFac implements IUpdatable {
  * events, use [[OnKey]] instead.
  */
 export function HandleKeys(keys: ActionKeysHandlerMap | ActionKeysHandlerMap[])
-        : IBehaviorFactory {
+        : IBehaviorFactory<Sprite> {
     return (game : Game, sprite : Sprite) =>
         new HandleKeysClass(game, sprite, keys);
 }
@@ -204,7 +204,7 @@ class HandleKeysClass extends BehaviorFac implements IUpdatable {
  * A behavior that maps keypresses to changes in sprite rotation.
  */
 export function RotateKeys(strength : number, keys: ActionKeysMap)
-        : IBehaviorFactory {
+        : IBehaviorFactory<Sprite> {
     return (game : Game, sprite : Sprite) =>
         new RotateKeysClass(game, sprite, strength, keys);
 }
@@ -288,7 +288,7 @@ class ThrustKeysClass extends BehaviorFac implements IUpdatable, IDestroyable {
  * A behavior that maps keypresses to changes in sprite velocity.
  */
 export function ThrustKeys(keys: ActionKeysMap)
-        : IBehaviorFactory {
+        : IBehaviorFactory<Sprite> {
     return (game : Game, sprite : Sprite) =>
         new ThrustKeysClass(game, sprite, keys);
 }
@@ -320,7 +320,7 @@ class FrictionClass extends BehaviorFac implements IUpdatable {
  * Consider using [[SpeedRamp]] instead.
  */
 export function Friction(strength : number)
-        : IBehaviorFactory {
+        : IBehaviorFactory<Sprite> {
     return (game : Game, sprite : Sprite) =>
         new FrictionClass(game, sprite, strength);
 }
@@ -346,7 +346,7 @@ class SpeedLimitedClass extends BehaviorFac implements IUpdatable {
  * Consider using [[SpeedRamp]] instead.
  */
 export function SpeedLimited(limit : number)
-        : IBehaviorFactory {
+        : IBehaviorFactory<Sprite> {
     return (game : Game, sprite : Sprite) =>
         new SpeedLimitedClass(game, sprite, limit);
 }
@@ -367,7 +367,7 @@ class ThrustClass extends BehaviorFac implements IUpdatable {
  *
  * Consider using [[SpeedRamp]] instead of this.
  */
-export function Thrust(strength : number) : IBehaviorFactory {
+export function Thrust(strength : number) : IBehaviorFactory<Sprite> {
     return (game : Game, sprite : Sprite) =>
         new ThrustClass(game, sprite, strength);
 }
@@ -423,7 +423,7 @@ class SpeedRampClass extends BehaviorFac implements IUpdatable, IDestroyable {
  * @param rampDown The number of seconds require to reach zero from max speed.
  */
 export function SpeedRamp(maxSpeed : number, rampUp : number,
-                          rampDown : number) : IBehaviorFactory {
+                          rampDown : number) : IBehaviorFactory<Sprite> {
     return (game : Game, sprite : Sprite) =>
         new SpeedRampClass(game, sprite, maxSpeed, rampUp, rampDown);
 }
@@ -473,8 +473,8 @@ class OnKeyClass extends BehaviorFac implements IUpdatable, IDestroyable {
  *
  * Key event is discarded if it occurs while game is paused.
  */
-export function OnKey(spec : KeyHandlerSpec) : IBehaviorFactory {
-    return (game : Game, sprite : Sprite) =>
+export function OnKey<S extends Sprite>(spec : KeyHandlerSpec) : IBehaviorFactory<Sprite> {
+    return (game : Game, sprite : S) =>
         new OnKeyClass(game, sprite, spec);
 }
 
