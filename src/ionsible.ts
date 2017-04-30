@@ -24,6 +24,7 @@ export * from "./game"
 export * from "./sprite"
 export * from "./shape"
 export * from "./keys"
+export * from "./event"
 
 import * as b from "./behavior"
 import * as util from "./util"

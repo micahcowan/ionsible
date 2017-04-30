@@ -15,6 +15,7 @@ import {
 import { Game } from "./game";
 import { IBody } from "./shape";
 import * as body from "./body";
+import { Event, IEventListener } from "./event";
 
 /**
  * Interface for things that can be drawn by the game.
@@ -88,7 +89,7 @@ export function isDestroyable(b : any | IDestroyable) : b is IDestroyable {
  * Sprites are both updated, and drawn to canvas, so [[ISprite]] combines
  * both features, as well as a destruction facility.
  */
-export interface ISprite extends IPositionedDrawable, IUpdatable, IDestroyable {
+export interface ISprite extends IPositionedDrawable, IUpdatable, IDestroyable, IEventListener {
 }
 
 /**
@@ -208,4 +209,6 @@ export class Sprite implements ISprite {
                 b.destroy();
         }
     }
+
+    handleEvent(event : Event) : void {}
 }

@@ -38,6 +38,9 @@ import {
     ActionKeysMap
   , Keys
 } from "./keys";
+import {
+    KeyHandlerEvent
+} from "./event";
 
 /**
  * Convenience base class for behaviors, which saves away the required
@@ -130,10 +133,13 @@ export function HandleKeys(keys: ActionKeysHandlerMap | ActionKeysHandlerMap[])
 /**
  * A mapping of key handler functions to the keypresses that may trigger them.
  */
+// Tried to do this as a union of interfaces or types, but TypeScript somehow
+// wanted to insist that the union (either version) have an index type.
 export type ActionKeysHandlerMap = {
-    handler: KeyHandlerCallback
-  , keys: string[]
-}
+    token?: any  // Typically either a string or Symbol
+  , handler?: KeyHandlerCallback
+  , keys: string | string[]
+};
 
 /**
  * A callback for use with [[HandleKeys]].
@@ -141,6 +147,14 @@ export type ActionKeysHandlerMap = {
 export interface KeyHandlerCallback {
     (game : Game, sprite : Sprite, delta : Duration) : void;
 }
+// Used internally as the KeyHandlerCallback when a token is specified rather than callback fn.
+let eventFiringKeyHandler : (token: any) => KeyHandlerCallback =
+    (token: any) => (game, sprite, delta) => {
+        if (token !== undefined) {
+            let event = new KeyHandlerEvent(token, delta);
+            sprite.handleEvent(event);
+        }
+    };
 
 class HandleKeysClass extends BehaviorFac implements IUpdatable {
     private mk : Keys;
@@ -156,7 +170,8 @@ class HandleKeysClass extends BehaviorFac implements IUpdatable {
         if (!(keys instanceof Array))
             keys = [keys];
         keys.forEach(
-            ({handler, keys: keylist}) => {
+            ({handler, token, keys: keylist}) => {
+                handler = handler === undefined? eventFiringKeyHandler(token) : handler;
                 adjustedKeys[i] = keylist
                 this.map[i] = handler;
                 ++i;
@@ -416,20 +431,32 @@ export function SpeedRamp(maxSpeed : number, rampUp : number,
 class OnKeyClass extends BehaviorFac implements IUpdatable, IDestroyable {
     private mk : Keys;
 
+    private fire : (s: Sprite) => void;
     constructor(game : Game, sprite : Sprite, spec : KeyHandlerSpec) {
         super(game, sprite);
 
         this.mk = new Keys;
+        if (spec.fire !== undefined) {
+            this.fire = spec.fire;
+        }
+        else if (spec.token !== undefined) {
+            let handler = eventFiringKeyHandler(spec.token);
+            this.fire = (s) => handler(game, s, new Duration(0))
+        }
+        else {
+            // Can't do anything, so we won't :/
+            this.fire = (s) => {};
+        }
         if (spec.keyUp) {
             this.mk.onUp(spec.keyUp, () => {
                 if (!this.game.paused)
-                    spec.fire(this.sprite);
+                    this.fire(this.sprite);
             });
         }
         if (spec.keyDown) {
             this.mk.onDown(spec.keyDown, () => {
                 if (!this.game.paused)
-                    spec.fire(this.sprite);
+                    this.fire(this.sprite);
             });
         }
     }
@@ -458,5 +485,6 @@ export function OnKey(spec : KeyHandlerSpec) : IBehaviorFactory {
 export type KeyHandlerSpec = {
     keyUp?: string | string[]
   , keyDown?: string | string[]
-  , fire: (sprite : any) => any
+  , fire?: (sprite : any) => any
+  , token?: any
 }
