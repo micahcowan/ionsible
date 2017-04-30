@@ -181,7 +181,7 @@ class HandleKeysClass extends BehaviorFac implements IUpdatable {
     }
 
     update(delta : Duration) {
-        let tracker = this.mk.pulse() as any;
+        let tracker = this.mk.pulse();
         for (let key in tracker) {
             if (tracker[key] && key in this.map) {
                 this.map[key](this.game, this.sprite, delta);
@@ -221,7 +221,7 @@ class RotateKeysClass extends BehaviorFac implements IUpdatable {
     }
 
     update(delta : Duration) {
-        let tracker = this.mk.pulse() as any;
+        let tracker = this.mk.pulse();
         if (tracker.clock)
             this.sprite.rotation += this.strength * delta.s;
         if (tracker.counter)
