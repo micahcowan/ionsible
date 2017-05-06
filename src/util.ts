@@ -108,3 +108,35 @@ export function clampRadians(dir : number) : number {
 
     return dir;
 }
+
+/**
+ * Converts a scale between two values, to a scale between two other values.
+ *
+ * Call this function with initialization values, to produce a function you may
+ * call repeatedly with an input value, to return an output value.
+ *
+ * Note: min and max don't have to actually be the smallest/largest values.
+ *
+ * ```
+ * let ramp = makeScalingRamp(2, 3, 0, 0.5);
+ * let value = ramp(2.5);
+ * value == 0.25; // Halfway between input values = halfway between output.
+ * ```
+ */
+export function makeScalingRamp(inMin : number, inMax : number,
+        outMin : number, outMax : number) : (n: number) => number {
+    return (inVal) => {
+        // Clamp the input value to the provided min/max
+        if (inVal > Math.max(inMin, inMax)) {
+            inVal = Math.max(inMin, inMax);
+        }
+        else if (inVal < Math.min(inMin, inMax)) {
+            inVal = Math.min(inMin, inMax);
+        }
+
+        // Convert to scale of 0 to 1
+        let scale = (inVal - inMin) / (inMax - inMin);
+        let out = outMin + scale * (outMax - outMin);
+        return out;
+    };
+}
