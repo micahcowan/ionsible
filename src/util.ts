@@ -3,7 +3,7 @@
  */
 import { Game } from "./game";
 import { Sprite } from "./sprite";
-import { point, veloc } from "./space-time";
+import { point, veloc, accel, Velocity, Acceleration } from "./space-time";
 import {
     Exceed
   , IBoundsCallback
@@ -139,4 +139,30 @@ export function makeScalingRamp(inMin : number, inMax : number,
         let out = outMin + scale * (outMax - outMin);
         return out;
     };
+}
+
+/**
+ * Given how high you want a jump to be, and how long you want to take from
+ * start of the jump to hitting the ground again, returns
+ * the gravity accelleration to use. Pair with [[getJumpSpeed]].
+ * @param height how high you want the jump to reach
+ * @param time how long (in seconds) the total jump should take
+ * @return the downward (positive y) [[Acceleration]] for gravity
+ */
+export function getJumpGravity(height : number, time : number) : Acceleration {
+    let grav = 8 * height / (time * time);
+    return accel(0, grav);
+}
+
+/**
+ * Given how high you want a jump to be, and how long you want to take from
+ * start of the jump to hitting the ground again, returns
+ * the initial velocity for a jump. Pair with [[getJumpGravity]].
+ * @param height how high you want the jump to reach
+ * @param time how long (in seconds) the total jump should take
+ * @return the upward (negative y) [[Velocity]] for the jump
+ */
+export function getJumpSpeed(height : number, time : number) : Velocity {
+    let spd = 4 * height / time;
+    return veloc(0, -spd);
 }
