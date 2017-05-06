@@ -138,19 +138,23 @@ export class Game {
     public maxFramesSkipped : number = 5;
 
     private updateScene(scene : Scene, delta : Duration) {
+        this.elapsed = new Duration(this.elapsed.ms + delta.ms);
+        this.updateSceneInner(scene, delta);
+        // Camera update
+        this.camera.update(delta);
+    }
+
+    private updateSceneInner(scene : Scene, delta : Duration) {
         scene.forEach(
             (arg : SceneElement) => {
                 if (isUpdatable(arg)) {
                     arg.update(delta);
                 }
                 if (isSpriteContainer(arg)) {
-                    this.updateScene(arg.subsprites, delta);
+                    this.updateSceneInner(arg.subsprites, delta);
                 }
             }
         );
-
-        // Camera update
-        this.camera.update(delta);
     }
 
     /**
@@ -173,7 +177,6 @@ export class Game {
 
                 // Updates
                 if (!this.paused) {
-                    this.elapsed = new Duration(this.elapsed.ms + delta.ms);
                     this.updateScene(this.scene, delta);
                 }
 
