@@ -166,3 +166,16 @@ export function getJumpSpeed(height : number, time : number) : Velocity {
     let spd = 4 * height / time;
     return veloc(0, -spd);
 }
+
+/**
+ * Either a value of type `T`, or a function that produces a value of type `T`.
+ * **NOTE:** `T` should never itself be a function type.
+ */
+export type Get<T> = T | (() => T);
+
+/**
+ * Gets a value of type `T` from a `Get<T>`.
+ */
+export function getVal<T>(val : Get<T>) : T {
+    return (typeof val == "function")? val() : val;
+}
