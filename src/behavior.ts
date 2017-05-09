@@ -18,7 +18,8 @@ import {
 } from "./sprite";
 import { Game } from "./game";
 import {
-    Acceleration as DeltaV
+    Point
+  , Acceleration as DeltaV
   , Duration
   , accel
   , veloc
@@ -27,6 +28,7 @@ import {
     DynamicRect
   , getRect
   , shrinkRect
+  , clampRadians
 } from "./util";
 import {
     Rect
@@ -41,6 +43,10 @@ import {
 import {
     KeyHandlerEvent
 } from "./event";
+import {
+    Get
+  , getVal
+} from "./util";
 
 /**
  * Convenience base class for behaviors, which saves away the required
@@ -487,4 +493,75 @@ export type KeyHandlerSpec = {
   , keyDown?: string | string[]
   , fire?: (sprite : any) => any
   , token?: any
+}
+
+class RotateTowardPlusClass extends BehaviorFac implements IUpdatable {
+    update(delta : Duration) {
+        let sp = this.sprite;
+        let dest = getVal(this.loc);
+        if (!dest) return;
+
+        // Find out which direction is from the sprite, toward dest
+        let dm = sp.pos.diff(dest).asDirMag();
+        // A conversion: zero degrees is pointing straight right;
+        // But a sprite is normally made with the top pointing "up"
+        // at zero degrees.
+        let desiredDir = dm.dir - Math.PI / 2 + this.addRot;
+
+        let maxRot = this.rotSpeed * delta.s;
+        let desiredRot = clampRadians(desiredDir - sp.rotation);
+        // Rotate whichever direction is closest (clockwise? counter?):
+        if (desiredRot > Math.PI)
+            desiredRot -= 2 * Math.PI;
+
+        let scaleDown = maxRot / Math.abs(desiredRot);
+        sp.rotation += desiredRot * (scaleDown < 1? scaleDown : 1);
+    }
+
+    constructor(
+        g : Game
+      , s : Sprite
+      , private loc : Get<Point | undefined>
+      , private addRot : number = 0
+      , private rotSpeed : number = 2 * Math.PI
+    ) {
+        super(g, s);
+    }
+}
+
+/**
+ * Maintain a rotation for the sprite, pointing toward the given coordinate.
+ * If the point is undefined, rotation remains at its current value.
+ * Assumes the top side of the sprite should be the one facing.
+ *
+ * @param loc the point toward which the sprite will be rotated (or `undefined`). Or, a function returning a [[Point]] or `undefined`.
+ * @param rotSpeed the speed at which the sprite will be rotated to point at that orientation, in radians per second.
+ */
+export function RotateToward(loc: Get<Point | undefined>, rotSpeed : number = 2 * Math.PI) : IBehaviorFactory<Sprite> {
+    return ((game, sprite) => new RotateTowardPlusClass(game, sprite, loc, 0, rotSpeed));
+}
+
+/**
+ * Maintain a rotation for the sprite, pointing toward the given coordinate, offset by `addedRot`.
+ * If the point is undefined, rotation remains at its current value.
+ * Assumes the top side of the sprite should be the one facing.
+ *
+ * @param loc the point toward which the sprite will be rotated (or `undefined`). Or, a function returning a [[Point]] or `undefined`.
+ * @param addedRot the amount of rotation (in radians) to add to the rotation determined to be "towarad" `loc`.
+ * @param rotSpeed the speed at which the sprite will be rotated to point at that orientation, in radians per second.
+ */
+export function RotateTowardPlus(loc: Get<Point | undefined>, addRot : number, rotSpeed : number = 2 * Math.PI) : IBehaviorFactory<Sprite> {
+    return ((game, sprite) => new RotateTowardPlusClass(game, sprite, loc, addRot, rotSpeed));
+}
+
+/**
+ * Maintain a rotation for the sprite, pointing away from the given coordinate.
+ * If the point is undefined, rotation remains at its current value.
+ * Assumes the top side of the sprite should be the one facing away.
+ *
+ * @param loc the point away from which the sprite will be rotated (or `undefined`). Or, a function returning a [[Point]] or `undefined`.
+ * @param rotSpeed the speed at which the sprite will be rotated to point at that orientation, in radians per second.
+ */
+export function RotateAwayFrom(loc: Get<Point | undefined>, rotSpeed : number = 2 * Math.PI) : IBehaviorFactory<Sprite> {
+    return ((game, sprite) => new RotateTowardPlusClass(game, sprite, loc, Math.PI, rotSpeed));
 }
