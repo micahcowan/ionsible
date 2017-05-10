@@ -89,7 +89,12 @@ export interface BasicXY {
 }
 
 /**
- * A generic type providing the common definition for
+ * A type corresponding to what other frameworks might call a `Vector2D` or somesuch.
+ * The name we use has been chosen to emphasize the fact that, in Ionsible, a point,
+ * velocity, or acceleration vector are distinct types, defined in terms of one another
+ * and sharing a common interface.
+ *
+ * [[DerivablePoint]] is a generic type providing the common definition for
  * the [[Point]], [[Velocity]], and [[Acceleration]] classes,
  * allowing a [[Point]] to be advanced by a [[Velocity]] over time ([[Duration]]),
  * or a [[Velocity]] to be advanced by an [[Acceleration]] over time.
@@ -97,11 +102,25 @@ export interface BasicXY {
  * advanced by any unspecified [[BasicXY]] (this allows advancing an
  * [[Acceleration]] by a [[Point]] or [[Velocity]], but this is not encouraged).
  *
- * The intention is to force separation between a [[Position]] over time,
+ * The intention is to force separation between a [[Point]] over time,
  * and its derivatives ([[Velocity]], [[Acceleration]]), requiring time
  * ([[Duration]]) to be involved at each step, and thereby reducing the likelihood
  * that the user can forget to scale by time before adding to a position ([[Point]]),
  * or accidentally use a velocity where they'd meant to use a position.
+ * This separation is intended to aid the developer in avoiding common mistakes,
+ * such as forgetting to scale a velocity by the change in time.
+ *
+ * An unfortunate side effect of this design is that, in error messages and the like,
+ * or type annotations provided by an IDE, you'll find references to type
+ * `DerivablePoint<DerivablePoint<DerivablePoint<D extends BasicXY>`, which is ugly.
+ * Just realize that such a type refers either to a [[Point]], [[Velocity]], or
+ * [[Acceleration]]. The more repetitions of `DerivablePoint` you see in a type, the
+ * further to the left in this list is the type mnemonic (the example type, with three
+ * occurrences of `DerivablePoint`, is a [[Point]]).
+ *
+ * So that the developer does not have to refer to the `DerivablePoint` and its ugly
+ * variations in his code, the type aliases [[Point]], [[Velocity]] and [[Acceleration]]
+ * have been provided, along with factory functions [[point]], [[veloc]] and [[accel]].
  */
 export class DerivablePoint<D extends BasicXY> {
     private readonly _x : number;
