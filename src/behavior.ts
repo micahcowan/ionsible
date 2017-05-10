@@ -54,19 +54,21 @@ export type DestructorFunc  = () => void;
 /**
  * Convenience base class for behaviors. See [[makeBehavior]].
  */
-class BehaviorBase<S extends Sprite> implements IDestroyable, IUpdatable {
+export class BehaviorBase<S extends Sprite> implements IDestroyable, IUpdatable {
     constructor(
         protected game : Game
       , protected sprite: S
       , private updateFn : UpdateFunc
       , private destructorFn? : DestructorFunc) {}
 
+    /** Does minimal cleanup, and calls any user-supplied destructor function.  */
     destroy() : void {
         if (this.destructorFn !== undefined) this.destructorFn();
         delete this.game;
         delete this.sprite;
     }
 
+    /** Just calls the `updateFn` the user supplied to the constructor. */
     update(delta : Duration) {
         this.updateFn(delta);
     }
@@ -80,7 +82,10 @@ class BehaviorBase<S extends Sprite> implements IDestroyable, IUpdatable {
  *
  * In order to create a "behavior" that takes parameters, write a function
  * that takes those arguments and returns the results of [[makeBehavior]].
- * See the implementation of [[HandleKeys]] for a concrete example.
+ * 
+ * More complex behaviors, that require substantial initialization,
+ * might prefer to avoid [[makeBehavior]], and instead derive [[BehaviorBase]]
+ * themselves, or implement [[IUpdatable]] on their own.
  */
 export function makeBehavior<S extends Sprite>(updateFn : UpdateFunc, destructorFn? : DestructorFunc) : IBehaviorFactory<S> {
     return (game, sprite) => new BehaviorBase(game, sprite, updateFn, destructorFn);
@@ -174,13 +179,11 @@ let eventFiringKeyHandler : (token: any) => KeyHandlerCallback =
         }
     };
 
-class HandleKeysClass extends BehaviorFac implements IUpdatable {
+class HandleKeysClass implements IUpdatable {
     private mk : Keys;
     private map : { [label: string]: KeyHandlerCallback };
 
-    constructor (game : Game, sprite : Sprite, private keys : ActionKeysHandlerMap | ActionKeysHandlerMap[]) {
-        super(game, sprite);
-
+    constructor (private game : Game, private sprite : Sprite, private keys : ActionKeysHandlerMap | ActionKeysHandlerMap[]) {
         this.mk = new Keys;
         let adjustedKeys : ActionKeysMap = {};
         this.map = {};
@@ -207,14 +210,9 @@ class HandleKeysClass extends BehaviorFac implements IUpdatable {
         }
     }
 
-    // FIXME: Needs a "destroy" function (that would actually be used), that
-    // destroys the keys association.
     destroy() : void {
         this.mk.destroy();
-        //this.mk = null;
         delete this.mk
-
-        super.destroy();
     }
 }
 
@@ -227,13 +225,11 @@ export function RotateKeys(strength : number, keys: ActionKeysMap)
         new RotateKeysClass(game, sprite, strength, keys);
 }
 
-class RotateKeysClass extends BehaviorFac implements IUpdatable {
+class RotateKeysClass implements IUpdatable {
     private mk : Keys;
 
-    constructor (game : Game, sprite : Sprite,
+    constructor (private game : Game, private sprite : Sprite,
                  public strength : number, private keys : ActionKeysMap) {
-        super(game, sprite);
-
         this.mk = new Keys;
         this.mk.actions(keys);
     }
@@ -248,19 +244,15 @@ class RotateKeysClass extends BehaviorFac implements IUpdatable {
         if (this.sprite.rotation < 0)
             this.sprite.rotation += 2*Math.PI;
     }
-    // FIXME: Needs a "destroy" function (that would actually be used), that
-    // destroys the keys association.
 
     destroy() : void {
         this.mk.destroy();
         //this.mk = null;
         delete this.mk
-
-        super.destroy();
     }
 }
 
-class ThrustKeysClass extends BehaviorFac implements IUpdatable, IDestroyable {
+class ThrustKeysClass implements IUpdatable, IDestroyable {
     private mk : Keys;
 
     private sideToAccel : { [key: string] : DeltaV } = {
@@ -270,9 +262,8 @@ class ThrustKeysClass extends BehaviorFac implements IUpdatable, IDestroyable {
       , right:      accel(0, 1)
     };
 
-    constructor(game : Game, sprite : Sprite,
+    constructor(private game : Game, private sprite : Sprite,
                 private keys : ActionKeysMap) {
-        super(game, sprite);
 
         this.mk = new Keys;
         this.mk.actions(keys);
@@ -295,10 +286,7 @@ class ThrustKeysClass extends BehaviorFac implements IUpdatable, IDestroyable {
 
     destroy() : void {
         this.mk.destroy();
-        //this.mk = null;
         delete this.mk;
-
-        super.destroy();
     }
 }
 
@@ -339,23 +327,21 @@ class FrictionClass extends BehaviorFac implements IUpdatable {
  */
 export function Friction(strength : number)
         : IBehaviorFactory<Sprite> {
-    return (game : Game, sprite : Sprite) =>
-        new FrictionClass(game, sprite, strength);
-}
-
-class SpeedLimitedClass extends BehaviorFac implements IUpdatable {
-    // limit is in pixels per second.
-    constructor(game : Game, sprite : Sprite, public limit : number) {
-        super(game, sprite);
-    }
-
-    update(delta : Duration) : void {
-        let spr = this.sprite;
-        let dm = spr.vel.asDirMag();
-        if (dm.mag > this.limit)
-            dm.mag = this.limit;
-        spr.vel = veloc(dm);
-    }
+    return makeBehavior(
+        (delta : Duration) => {
+            let spr = this.sprite;
+            let dirMag = spr.vel.asDirMag();
+            let adjFric = this.strength * delta.s;
+            if (adjFric >= dirMag.mag) {
+                // Friction has brought sprite to a stop.
+                spr.vel = veloc(0, 0);
+            }
+            else {
+                dirMag.mag -= adjFric;
+                spr.vel = veloc(dirMag);
+            }
+        }
+    );
 }
 
 /**
@@ -365,18 +351,15 @@ class SpeedLimitedClass extends BehaviorFac implements IUpdatable {
  */
 export function SpeedLimited(limit : number)
         : IBehaviorFactory<Sprite> {
-    return (game : Game, sprite : Sprite) =>
-        new SpeedLimitedClass(game, sprite, limit);
-}
-
-class ThrustClass extends BehaviorFac implements IUpdatable {
-    constructor(game : Game, sprite : Sprite, private strength : number) {
-        super(game, sprite);
-    }
-    update(delta : Duration) : void {
-        let a = this.sprite.accel;
-        this.sprite.accel = accel(this.strength * a.x, this.strength * a.y);
-    }
+    return makeBehavior(
+        (delta : Duration) => {
+            let spr = this.sprite;
+            let dm = spr.vel.asDirMag();
+            if (dm.mag > this.limit)
+                dm.mag = this.limit;
+            spr.vel = veloc(dm);
+        }
+    );
 }
 
 /**
@@ -386,17 +369,19 @@ class ThrustClass extends BehaviorFac implements IUpdatable {
  * Consider using [[SpeedRamp]] instead of this.
  */
 export function Thrust(strength : number) : IBehaviorFactory<Sprite> {
-    return (game : Game, sprite : Sprite) =>
-        new ThrustClass(game, sprite, strength);
+    return makeBehavior(
+        (delta : Duration) => {
+            let a = this.sprite.accel;
+            this.sprite.accel = accel(this.strength * a.x, this.strength * a.y);
+        }
+    );
 }
 
-class SpeedRampClass extends BehaviorFac implements IUpdatable, IDestroyable {
+class SpeedRampClass implements IUpdatable, IDestroyable {
     private behaviorsInst : IUpdatable[];
 
-    constructor(game : Game, sprite : Sprite, maxSpeed : number,
+    constructor(private game : Game, private sprite : Sprite, maxSpeed : number,
                 rampUp : number, rampDown : number) {
-        super(game, sprite);
-
         let friction = maxSpeed / rampDown;
         let thrust = maxSpeed / rampUp + friction;
 
@@ -422,8 +407,6 @@ class SpeedRampClass extends BehaviorFac implements IUpdatable, IDestroyable {
             if (isDestroyable(b))
                 b.destroy();
         }
-
-        super.destroy();
     }
 }
 
@@ -446,13 +429,11 @@ export function SpeedRamp(maxSpeed : number, rampUp : number,
         new SpeedRampClass(game, sprite, maxSpeed, rampUp, rampDown);
 }
 
-class OnKeyClass extends BehaviorFac implements IUpdatable, IDestroyable {
+class OnKeyClass implements IUpdatable, IDestroyable {
     private mk : Keys;
 
     private fire : (s: Sprite) => void;
-    constructor(game : Game, sprite : Sprite, spec : KeyHandlerSpec) {
-        super(game, sprite);
-
+    constructor(private game : Game, private sprite : Sprite, spec : KeyHandlerSpec) {
         this.mk = new Keys;
         if (spec.fire !== undefined) {
             this.fire = spec.fire;
@@ -508,27 +489,6 @@ export type KeyHandlerSpec = {
 }
 
 class RotateTowardPlusClass extends BehaviorFac implements IUpdatable {
-    update(delta : Duration) {
-        let sp = this.sprite;
-        let dest = getVal(this.loc);
-        if (!dest) return;
-
-        // Find out which direction is from the sprite, toward dest
-        let dm = sp.pos.diff(dest).asDirMag();
-        // A conversion: zero degrees is pointing straight right;
-        // But a sprite is normally made with the top pointing "up"
-        // at zero degrees.
-        let desiredDir = dm.dir - Math.PI / 2 + this.addRot;
-
-        let maxRot = this.rotSpeed * delta.s;
-        let desiredRot = clampRadians(desiredDir - sp.rotation);
-        // Rotate whichever direction is closest (clockwise? counter?):
-        if (desiredRot > Math.PI)
-            desiredRot -= 2 * Math.PI;
-
-        let scaleDown = maxRot / Math.abs(desiredRot);
-        sp.rotation += desiredRot * (scaleDown < 1? scaleDown : 1);
-    }
 
     constructor(
         g : Game
@@ -550,7 +510,29 @@ class RotateTowardPlusClass extends BehaviorFac implements IUpdatable {
  * @param rotSpeed the speed at which the sprite will be rotated to point at that orientation, in radians per second.
  */
 export function RotateToward(loc: Get<Point | undefined>, rotSpeed : number = 2 * Math.PI) : IBehaviorFactory<Sprite> {
-    return ((game, sprite) => new RotateTowardPlusClass(game, sprite, loc, 0, rotSpeed));
+    return makeBehavior(
+        (delta : Duration) => {
+            let sp = this.sprite;
+            let dest = getVal(loc);
+            if (!dest) return;
+
+            // Find out which direction is from the sprite, toward dest
+            let dm = sp.pos.diff(dest).asDirMag();
+            // A conversion: zero degrees is pointing straight right;
+            // But a sprite is normally made with the top pointing "up"
+            // at zero degrees.
+            let desiredDir = dm.dir - Math.PI / 2 + this.addRot;
+
+            let maxRot = this.rotSpeed * delta.s;
+            let desiredRot = clampRadians(desiredDir - sp.rotation);
+            // Rotate whichever direction is closest (clockwise? counter?):
+            if (desiredRot > Math.PI)
+                desiredRot -= 2 * Math.PI;
+
+            let scaleDown = maxRot / Math.abs(desiredRot);
+            sp.rotation += desiredRot * (scaleDown < 1? scaleDown : 1);
+        }
+    );
 }
 
 /**
