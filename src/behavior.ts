@@ -48,25 +48,42 @@ import {
   , getVal
 } from "./util";
 
+export type UpdateFunc      = (d : Duration) => void;
+export type DestructorFunc  = () => void;
+
 /**
- * Convenience base class for behaviors, which saves away the required
- * `game` and `sprite` arguments.
+ * Convenience base class for behaviors. See [[makeBehavior]].
  */
-export class BehaviorFac implements IDestroyable {
-    constructor(protected game : Game, protected sprite: Sprite) {}
+class BehaviorBase<S extends Sprite> implements IDestroyable, IUpdatable {
+    constructor(
+        protected game : Game
+      , protected sprite: S
+      , private updateFn : UpdateFunc
+      , private destructorFn? : DestructorFunc) {}
 
     destroy() : void {
-        //this.game = null;
-        //this.sprite = null;
+        if (this.destructorFn !== undefined) this.destructorFn();
         delete this.game;
         delete this.sprite;
     }
+
+    update(delta : Duration) {
+        this.updateFn(delta);
+    }
 }
 
-class MomentumClass extends BehaviorFac implements IUpdatable {
-    update(delta : Duration) {
-        this.sprite.pos = this.sprite.pos.advanced(this.sprite.vel, delta);
-    }
+/**
+ * A facility for creating new sprite behaviors.
+ *
+ * Simply invoke [[makeBehavior]] with an [[UpdateFunc]] as its argument.
+ * You may also optionally provide a second argument for use as a [[DestructorFunc]].
+ *
+ * In order to create a "behavior" that takes parameters, write a function
+ * that takes those arguments and returns the results of [[makeBehavior]].
+ * See the implementation of [[HandleKeys]] for a concrete example.
+ */
+export function makeBehavior<S extends Sprite>(updateFn : UpdateFunc, destructorFn? : DestructorFunc) : IBehaviorFactory<S> {
+    return (game, sprite) => new BehaviorBase(game, sprite, updateFn, destructorFn);
 }
 
 /**
@@ -76,13 +93,11 @@ class MomentumClass extends BehaviorFac implements IUpdatable {
  * Consider using [[SpeedRamp]] instead.
  */
 export let Momentum : IBehaviorFactory<Sprite>
-    = (game, sprite) => new MomentumClass(game, sprite);
-
-class AccelerationClass extends BehaviorFac implements IUpdatable {
-    update(delta : Duration) {
-        this.sprite.vel = this.sprite.vel.advanced(this.sprite.accel, delta);
-    }
-}
+    = makeBehavior(
+        (delta : Duration) => {
+            this.sprite.pos = this.sprite.pos.advanced(this.sprite.vel, delta);
+        }
+    );
 
 /**
  * Advances the sprite's `vel` by `accel` at each tick.
@@ -90,7 +105,11 @@ class AccelerationClass extends BehaviorFac implements IUpdatable {
  * Consider using [[SpeedRamp]] instead.
  */
 export let Acceleration : IBehaviorFactory<Sprite>
-    = (game, sprite) => new AccelerationClass(game, sprite);
+    = makeBehavior(
+        (delta : Duration) => {
+            this.sprite.vel = this.sprite.vel.advanced(this.sprite.accel, delta);
+        }
+    );
 
 /**
  * Detects when a sprite's position has exceeded certain bounds, and
@@ -101,26 +120,19 @@ export let Acceleration : IBehaviorFactory<Sprite>
  */
 export function Bounded(drect : DynamicRect, cb : IBoundsCallback)
         : IBehaviorFactory<Sprite> {
-    return (game : Game, sprite : Sprite) =>
-        new BoundedClass(game, sprite, drect, cb);
-}
+    return makeBehavior(
+        (delta : Duration) => {
+            let bodyBB = this.sprite.body.bounds;
 
-class BoundedClass extends BehaviorFac implements IUpdatable {
-    constructor(game : Game, sprite : Sprite,
-                private drect : DynamicRect, private cb : IBoundsCallback) {
-        super(game, sprite);
-    }
-    update(delta : Duration) {
-        let bodyBB = this.sprite.body.bounds;
+            let rect : Rect = getRect(this.drect, this.game, this.sprite);
+            rect = shrinkRect(rect, bodyBB);
 
-        let rect : Rect = getRect(this.drect, this.game, this.sprite);
-        rect = shrinkRect(rect, bodyBB);
-
-        let exceed = exceedsBounds(this.sprite.pos, rect)
-        if (testExceed(exceed)) {
-            this.cb(this.sprite, rect, exceed);
+            let exceed = exceedsBounds(this.sprite.pos, rect)
+            if (testExceed(exceed)) {
+                this.cb(this.sprite, rect, exceed);
+            }
         }
-    }
+    );
 }
 
 /**
